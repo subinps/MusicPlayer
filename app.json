@@ -1,0 +1,69 @@
+{
+  "name": "Telegram Voice Chat Music Player Bot ",
+  "description": "Telegram Bot to Play Audio in Telegram Voice Chats",
+  "repository": "https://github.com/subinps/MusicPlayer",
+  "keywords": [
+    "telegram",
+    "bot",
+    "voicechat",
+    "music",
+    "python",
+    "pyrogram",
+    "pytgcalls",
+    "tgcalls",
+    "voip"
+  ],
+  "env": {
+    "API_ID": {
+      "description": "api_id part of your Telegram API Key from my.telegram.org/apps",
+      "required": true
+    },
+    "API_HASH": {
+      "description": "api_hash part of your Telegram API Key from my.telegram.org/apps",
+      "required": true
+    },
+    "BOT_TOKEN": {
+      "description": "Bot token of Bot, get from @Botfather",
+      "required": true
+    },
+    "ARQ_API": {
+      "description": "get it for free from @ARQRobot",
+      "required": false
+    },
+    "SESSION_STRING": {
+      "description": "Session string, read the README to learn how to export it with Pyrogram",
+      "required": true
+    },
+    "CHAT": {
+      "description": "ID of Channel or Group where the Bot plays Music",
+      "required": true
+    },
+    "LOG_GROUP": {
+      "description": "ID of the group to send playlist If CHAT is a Group, if channel thenleave blank",
+      "required": false
+    },
+    "ADMINS": {
+      "description": "ID of Users who can use Admin commands(for multiple users seperated by space)",
+      "required": true
+    },
+    "STREAM_URL": {
+      "description": "URL of Radio station or Youtube live video url to stream with /radio command",
+      "value": "https://youtu.be/zcrUCvBD16k",
+      "required": false
+}
+  },
+  "formation": {
+    "worker": {
+      "quantity": 1,
+      "size": "free"
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest"
+    },
+    {
+      "url": "heroku/python"
+    }
+  ]
+}

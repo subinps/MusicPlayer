@@ -1,0 +1,12 @@
+Pyrogram==1.2.9
+TgCrypto==1.2.2
+ffmpeg-python
+psutil
+pytgcalls
+wheel
+python-arq
+aiohttp
+youtube_dl
+youtube_search_python
+youtube_search
+wget
