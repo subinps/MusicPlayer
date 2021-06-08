@@ -37,6 +37,8 @@ bot = Client(
     bot_token=Config.BOT_TOKEN,
     plugins=dict(root="plugins")
 )
+if not os.path.isdir("./downloads"):
+    os.makedirs("./downloads")
 async def main():
     async with bot:
         await mp.startupradio()
