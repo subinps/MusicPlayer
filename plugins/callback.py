@@ -84,7 +84,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
                 f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
                 for i, x in enumerate(playlist)
                 ])
-        await query.edit_message_reply_text(
+        await query.edit_message_text(
                 f"{pl}",
                 parse_mode="Markdown",
                 reply_markup=InlineKeyboardMarkup(
