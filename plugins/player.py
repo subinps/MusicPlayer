@@ -85,6 +85,9 @@ async def yplay(_, message: Message):
     if not group_call.is_connected:
         await mp.start_call()
     if type=="audio":
+        if round(m_audio.audio.duration / 60) > DURATION_LIMIT:
+            await message.reply_text(f"❌ Videos longer than {DURATION_LIMIT} minute(s) aren't allowed, the provided video is {m_audio.audio.duration/60} minute(s)")
+            return
         if not group_call.is_connected:
             await mp.start_call()
         if playlist and playlist[-1][2] \
@@ -131,13 +134,17 @@ async def yplay(_, message: Message):
             results = YoutubeSearch(ytquery, max_results=1).to_dict()
             url = f"https://youtube.com{results[0]['url_suffix']}"
             title = results[0]["title"][:40]
+            duration = results[0]["duration"]
         except Exception as e:
             await msg.edit(
                 "Song not found.\nTry inline mode.."
             )
             print(str(e))
             return
-        
+        if duration > DURATION_LIMIT:
+            await message.reply_text(f"❌ Videos longer than {DURATION_LIMIT} minute(s) aren't allowed, the provided video is {duration} minute(s)")
+            return
+
         data={1:title, 2:url, 3:"youtube", 4:user}
         playlist.append(data)
         group_call = mp.group_call

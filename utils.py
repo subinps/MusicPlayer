@@ -37,7 +37,7 @@ GROUP_CALLS = {}
 FFMPEG_PROCESSES = {}
 RADIO={6}
 LOG_GROUP=Config.LOG_GROUP
-DURATION_LIMIT=30
+DURATION_LIMIT=Config.DURATION_LIMIT
 playlist=Config.playlist
 msg=Config.msg
 
