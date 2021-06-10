@@ -5,7 +5,7 @@ psutil
 pytgcalls
 wheel
 python-arq
-aiohttp
+aiohttp==3.6.2
 youtube_dl
 youtube_search_python
 youtube_search
