@@ -176,13 +176,13 @@ class MusicPlayer(object):
         if group_call.is_connected:
             playlist.clear()   
             group_call.input_filename = ''
-            await group_call.stop()
         process = FFMPEG_PROCESSES.get(CHAT)
         if process:
             process.send_signal(signal.SIGTERM)
         station_stream_url = STREAM_URL
         group_call.input_filename = f'radio-{CHAT}.raw'
-        await group_call.start(CHAT)
+        if not group_call.is_connected:
+            await mp.start_call()
         try:
             RADIO.remove(0)
         except:
@@ -209,7 +209,6 @@ class MusicPlayer(object):
         if group_call:
             playlist.clear()   
             group_call.input_filename = ''
-            await group_call.stop()
             try:
                 RADIO.remove(1)
             except:
