@@ -141,7 +141,7 @@ async def yplay(_, message: Message):
             )
             print(str(e))
             return
-        if duration > DURATION_LIMIT:
+        if int(duration) > DURATION_LIMIT:
             await message.reply_text(f"❌ Videos longer than {DURATION_LIMIT} minute(s) aren't allowed, the provided video is {duration} minute(s)")
             return
 
