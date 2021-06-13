@@ -20,6 +20,7 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 import os
+from youtube_dl import YoutubeDL
 from config import Config
 from pyrogram import Client, filters, emoji
 from pyrogram.methods.messages.download_media import DEFAULT_DOWNLOAD_DIR
@@ -86,7 +87,7 @@ async def yplay(_, message: Message):
         await mp.start_call()
     if type=="audio":
         if round(m_audio.audio.duration / 60) > DURATION_LIMIT:
-            await message.reply_text(f"❌ Videos longer than {DURATION_LIMIT} minute(s) aren't allowed, the provided video is {m_audio.audio.duration/60} minute(s)")
+            await message.reply_text(f"❌ Videos longer than {DURATION_LIMIT} minute(s) aren't allowed, the provided video is {round(m_audio.audio.duration/60)} minute(s)")
             return
         if not group_call.is_connected:
             await mp.start_call()
@@ -134,7 +135,13 @@ async def yplay(_, message: Message):
             results = YoutubeSearch(ytquery, max_results=1).to_dict()
             url = f"https://youtube.com{results[0]['url_suffix']}"
             title = results[0]["title"][:40]
-            duration = results[0]["duration"]
+            ydl_opts = {
+                "geo-bypass": True,
+                "nocheckcertificate": True
+            }
+            ydl = YoutubeDL(ydl_opts)
+            info = ydl.extract_info(url, False)
+            duration = round(info["duration"] / 60)
         except Exception as e:
             await msg.edit(
                 "Song not found.\nTry inline mode.."
