@@ -456,7 +456,7 @@ async def show_playlist(_, m: Message):
             ])
     await m.reply_text(pl)
 
-admincmds=["join", "unmute", "mute", "leave", "clean", "vc", "pause", "resume", "stop", "skip", "radio", "stopradio", "replay", "restart"]
+admincmds=["join", "unmute", "mute", "leave", "clean", "vc", "pause", "resume", "stop", "skip", "radio", "stopradio", "replay", "restart", "info"]
 
 @Client.on_message(filters.command(admincmds) & ~filters.user(ADMINS))
 async def notforu(_, m: Message):
