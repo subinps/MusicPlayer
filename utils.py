@@ -135,7 +135,11 @@ class MusicPlayer(object):
         client = group_call.client
         raw_file = os.path.join(client.workdir, DEFAULT_DOWNLOAD_DIR,
                                 f"{song[1]}.raw")
+        if os.path.exists(raw_file):
+            os.remove(raw_file)
         if not os.path.isfile(raw_file):
+            # credits: https://t.me/c/1480232458/6825
+            os.mkfifo(raw_file)
             if song[3] == "telegram":
                 original_file = await bot.download_media(f"{song[2]}")
                 ffmpeg.input(original_file).output(
@@ -191,6 +195,10 @@ class MusicPlayer(object):
             RADIO.add(1)
         except:
             pass
+        if os.path.exists(group_call.input_filename):
+            os.remove(group_call.input_filename)
+        # credits: https://t.me/c/1480232458/6825
+        os.mkfifo(group_call.input_filename)
         process = ffmpeg.input(station_stream_url).output(
             group_call.input_filename,
             format='s16le',
