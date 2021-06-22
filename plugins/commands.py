@@ -21,15 +21,19 @@
 #SOFTWARE.
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram import Client, filters
+from utils import USERNAME
+from config import Config
+import os
+import sys
+U=USERNAME
 
 
-
-HOME_TEXT = "<b>Helo, [{}](tg://user?id={})\n\nIam MusicPlayer 2.0 which plays music in Channels and Groups 24*7\n\nI can even Stream Youtube Live in Your Voicechat\n\nDeploy Your Own bot from source code below\n\nHit /help to know about available commands.</b>"
+HOME_TEXT = "<b>Helo, [{}](tg://user?id={})\n\nIam MusicPlayer 2.0 which plays music in Channels and Groups 24*7.\n\nI can even Stream Youtube Live in Your Voicechat.\n\nDeploy Your Own bot from source code below.\n\nHit /help to know about available commands.</b>"
 HELP = """
 
 <b>Add the bot and User account in your Group with admin rights.
 
-Start a VoiceChat
+Start a VoiceChat.
 
 Use /play <song name> or use /play as a reply to an audio file or youtube link.
 
@@ -62,7 +66,7 @@ You can also use /dplay <song name> to play a song from Deezer.</b>
 
 
 
-@Client.on_message(filters.command('start'))
+@Client.on_message(filters.command(['start', f'start@{U}']))
 async def start(client, message):
     buttons = [
         [
@@ -83,7 +87,7 @@ async def start(client, message):
 
 
 
-@Client.on_message(filters.command("help"))
+@Client.on_message(filters.command(["help", f"help@{U}"]))
 async def show_help(client, message):
     buttons = [
         [
@@ -100,3 +104,7 @@ async def show_help(client, message):
         HELP,
         reply_markup=reply_markup
         )
+@Client.on_message(filters.command(["restart", f"restart@{U}"]) & filters.user(Config.ADMINS))
+async def restart(client, message):
+    await message.reply_text("🔄 Restarting...")
+    os.execl(sys.executable, sys.executable, *sys.argv)

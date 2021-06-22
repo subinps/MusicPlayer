@@ -25,16 +25,17 @@ from config import Config
 from pyrogram import Client, filters, emoji
 from pyrogram.methods.messages.download_media import DEFAULT_DOWNLOAD_DIR
 from pyrogram.types import Message
-from utils import mp, RADIO
+from utils import mp, RADIO, USERNAME, FFMPEG_PROCESSES
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from Python_ARQ import ARQ
 from youtube_search import YoutubeSearch
 from pyrogram import Client
 from aiohttp import ClientSession
+import signal
 import re
-
+U=USERNAME
 LOG_GROUP=Config.LOG_GROUP
-
+ADMIN_ONLY=Config.ADMIN_ONLY
 DURATION_LIMIT = Config.DURATION_LIMIT
 ARQ_API=Config.ARQ_API
 session = ClientSession()
@@ -46,8 +47,16 @@ CHAT=Config.CHAT
 LOG_GROUP=Config.LOG_GROUP
 playlist=Config.playlist
 
-@Client.on_message(filters.command("play") | filters.audio & filters.private)
+@Client.on_message(filters.command(["play", f"play@{U}"]) | filters.audio & filters.private)
 async def yplay(_, message: Message):
+    if ADMIN_ONLY == "Y":
+        admins=[626664225]
+        grpadmins=await _.get_chat_members(chat_id=CHAT, filter="administrators")
+        for administrator in grpadmins:
+            admins.append(administrator.user.id)
+        if message.from_user.id not in admins:
+            await message.reply_sticker("CAADBQADsQIAAtILIVYld1n74e3JuQI")
+            return
     type=""
     yturl=""
     ysearch=""
@@ -79,18 +88,12 @@ async def yplay(_, message: Message):
         else:
             await message.reply_text("You Didn't gave me anything to play. Send me a audio file or reply /play to an audio file.")
             return
-    if 1 in RADIO:
-        await mp.stop_radio()
     user=f"[{message.from_user.first_name}](tg://user?id={message.from_user.id})"
     group_call = mp.group_call
-    if not group_call.is_connected:
-        await mp.start_call()
     if type=="audio":
         if round(m_audio.audio.duration / 60) > DURATION_LIMIT:
             await message.reply_text(f"❌ Videos longer than {DURATION_LIMIT} minute(s) aren't allowed, the provided video is {round(m_audio.audio.duration/60)} minute(s)")
             return
-        if not group_call.is_connected:
-            await mp.start_call()
         if playlist and playlist[-1][2] \
                 == m_audio.audio.file_id:
             await message.reply_text(f"{emoji.ROBOT} Already added in Playlist")
@@ -102,6 +105,16 @@ async def yplay(_, message: Message):
                 f"{emoji.INBOX_TRAY} Downloading and Processing..."
             )
             await mp.download_audio(playlist[0])
+            if 1 in RADIO:
+                if group_call:
+                    group_call.input_filename = ''
+                    RADIO.remove(1)
+                    RADIO.add(0)
+                process = FFMPEG_PROCESSES.get(CHAT)
+                if process:
+                    process.send_signal(signal.SIGTERM)
+            if not group_call.is_connected:
+                await mp.start_call()
             file=playlist[0][1]
             group_call.input_filename = os.path.join(
                 _.workdir,
@@ -155,14 +168,22 @@ async def yplay(_, message: Message):
         data={1:title, 2:url, 3:"youtube", 4:user}
         playlist.append(data)
         group_call = mp.group_call
-        if not group_call.is_connected:
-            await mp.start_call()
         client = group_call.client
         if len(playlist) == 1:
             m_status = await msg.edit(
                 f"{emoji.INBOX_TRAY} Downloading and Processing..."
             )
             await mp.download_audio(playlist[0])
+            if 1 in RADIO:
+                if group_call:
+                    group_call.input_filename = ''
+                    RADIO.remove(1)
+                    RADIO.add(0)
+                process = FFMPEG_PROCESSES.get(CHAT)
+                if process:
+                    process.send_signal(signal.SIGTERM)
+            if not group_call.is_connected:
+                await mp.start_call()
             file=playlist[0][1]
             group_call.input_filename = os.path.join(
                 client.workdir,
@@ -187,8 +208,16 @@ async def yplay(_, message: Message):
             
         
    
-@Client.on_message(filters.command("dplay"))
+@Client.on_message(filters.command(["dplay", f"dplay@{U}"]))
 async def deezer(_, message):
+    if ADMIN_ONLY == "Y":
+        admins=[626664225]
+        grpadmins=await _.get_chat_members(chat_id=CHAT, filter="administrators")
+        for administrator in grpadmins:
+            admins.append(administrator.user.id)
+        if message.from_user.id not in admins:
+            await message.reply_sticker("CAADBQADsQIAAtILIVYld1n74e3JuQI")
+            return
     user=f"[{message.from_user.first_name}](tg://user?id={message.from_user.id})"
     if " " in message.text:
         text = message.text.split(" ", 1)
@@ -196,12 +225,8 @@ async def deezer(_, message):
     else:
         await message.reply_text("You Didn't gave me anything to play use /dplay <song name>")
         return
-    if 1 in RADIO:
-        await mp.stop_radio()
     user=f"[{message.from_user.first_name}](tg://user?id={message.from_user.id})"
     group_call = mp.group_call
-    if not group_call.is_connected:
-        await mp.start_call()
     msg = await message.reply("⚡️ **Fetching Song From Deezer...**")
     try:
         songs = await arq.deezer(query,1)
@@ -217,14 +242,22 @@ async def deezer(_, message):
     data={1:title, 2:url, 3:"deezer", 4:user}
     playlist.append(data)
     group_call = mp.group_call
-    if not group_call.is_connected:
-        await mp.start_call()
     client = group_call.client
     if len(playlist) == 1:
         m_status = await msg.edit(
             f"{emoji.INBOX_TRAY} Downloading and Processing..."
         )
         await mp.download_audio(playlist[0])
+        if 1 in RADIO:
+            if group_call:
+                group_call.input_filename = ''
+                RADIO.remove(1)
+                RADIO.add(0)
+            process = FFMPEG_PROCESSES.get(CHAT)
+            if process:
+                process.send_signal(signal.SIGTERM)
+        if not group_call.is_connected:
+            await mp.start_call()
         file=playlist[0][1]
         group_call.input_filename = os.path.join(
             client.workdir,
@@ -240,14 +273,15 @@ async def deezer(_, message):
             f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
             for i, x in enumerate(playlist)
             ])
-    await message.reply_text(pl)
+    if LOG_GROUP and message.chat.id != LOG_GROUP:
+        await message.reply_text(pl)
     for track in playlist[:2]:
         await mp.download_audio(track)
-    if LOG_GROUP and message.chat.id != LOG_GROUP:
+    if LOG_GROUP:
         await mp.send_playlist()
 
 
-@Client.on_message(filters.command("player"))
+@Client.on_message(filters.command(["player", f"player@{U}"]))
 async def player(_, m: Message):
     if not playlist:
         await m.reply_text(f"{emoji.NO_ENTRY} No songs are playing")
@@ -273,7 +307,7 @@ async def player(_, m: Message):
 			)
     )
 
-@Client.on_message(filters.command("skip") & filters.user(ADMINS))
+@Client.on_message(filters.command(["skip", f"skip@{U}"]) & filters.user(ADMINS))
 async def skip_track(_, m: Message):
     group_call = mp.group_call
     if not group_call.is_connected:
@@ -320,7 +354,7 @@ async def skip_track(_, m: Message):
                                        disable_web_page_preview=True)
 
 
-@Client.on_message(filters.command("join") & filters.user(ADMINS))
+@Client.on_message(filters.command(["join", f"join@{U}"]) & filters.user(ADMINS))
 async def join_group_call(client, m: Message):
     group_call = mp.group_call
     if group_call.is_connected:
@@ -338,12 +372,14 @@ async def leave_voice_chat(_, m: Message):
         await m.reply_text("Not joined any Voicechat yet.")
         return
     playlist.clear()
+    if 1 in RADIO:
+        await mp.stop_radio()
     group_call.input_filename = ''
     await group_call.stop()
     await m.reply_text("Left the VoiceChat")
 
 
-@Client.on_message(filters.command("vc") & filters.user(ADMINS))
+@Client.on_message(filters.command(["vc", f"vc@{U}"]) & filters.user(ADMINS))
 async def list_voice_chat(client, m: Message):
     group_call = mp.group_call
     if group_call.is_connected:
@@ -358,24 +394,27 @@ async def list_voice_chat(client, m: Message):
                                    + "Didn't join any voice chat yet")
 
 
-@Client.on_message(filters.command("stop") & filters.user(ADMINS))
+@Client.on_message(filters.command(["stop", f"stop@{U}"]) & filters.user(ADMINS))
 async def stop_playing(_, m: Message):
     group_call = mp.group_call
     if not group_call.is_connected:
         await m.reply_text("Nothing playing to stop.")
         return
+    if 1 in RADIO:
+        await mp.stop_radio()
     group_call.stop_playout()
     await m.reply_text(f"{emoji.STOP_BUTTON} Stopped playing")
     playlist.clear()
 
 
-@Client.on_message(filters.command("replay") & filters.user(ADMINS))
+@Client.on_message(filters.command(["replay", f"replay@{U}"]) & filters.user(ADMINS))
 async def restart_playing(_, m: Message):
     group_call = mp.group_call
     if not group_call.is_connected:
         await m.reply_text("Nothing playing to replay.")
         return
     if not playlist:
+        await m.reply_text("Empty Playlist.")
         return
     group_call.restart_playout()
     await m.reply_text(
@@ -384,7 +423,7 @@ async def restart_playing(_, m: Message):
     )
 
 
-@Client.on_message(filters.command("pause") & filters.user(ADMINS))
+@Client.on_message(filters.command(["pause", f"pause@{U}"]) & filters.user(ADMINS))
 async def pause_playing(_, m: Message):
     group_call = mp.group_call
     if not group_call.is_connected:
@@ -396,7 +435,7 @@ async def pause_playing(_, m: Message):
 
 
 
-@Client.on_message(filters.command("resume") & filters.user(ADMINS))
+@Client.on_message(filters.command(["resume", f"resume@{U}"]) & filters.user(ADMINS))
 async def resume_playing(_, m: Message):
     if not mp.group_call.is_connected:
         await m.reply_text("Nothing paused to resume.")
@@ -405,7 +444,7 @@ async def resume_playing(_, m: Message):
     await m.reply_text(f"{emoji.PLAY_OR_PAUSE_BUTTON} Resumed",
                                quote=False)
 
-@Client.on_message(filters.command("clean") & filters.user(ADMINS))
+@Client.on_message(filters.command(["clean", f"clean@{U}"]) & filters.user(ADMINS))
 async def clean_raw_pcm(client, m: Message):
     download_dir = os.path.join(client.workdir, DEFAULT_DOWNLOAD_DIR)
     all_fn: list[str] = os.listdir(download_dir)
@@ -422,7 +461,7 @@ async def clean_raw_pcm(client, m: Message):
     await m.reply_text(f"{emoji.WASTEBASKET} Cleaned {count} files")
 
 
-@Client.on_message(filters.command("mute") & filters.user(ADMINS))
+@Client.on_message(filters.command(["mute", f"mute@{U}"]) & filters.user(ADMINS))
 async def mute(_, m: Message):
     group_call = mp.group_call
     if not group_call.is_connected:
@@ -432,7 +471,7 @@ async def mute(_, m: Message):
     await m.reply_text(f"{emoji.MUTED_SPEAKER} Muted")
 
 
-@Client.on_message(filters.command("unmute") & filters.user(ADMINS))
+@Client.on_message(filters.command(["unmute", f"unmute@{U}"]) & filters.user(ADMINS))
 async def unmute(_, m: Message):
     group_call = mp.group_call
     if not group_call.is_connected:
@@ -441,14 +480,14 @@ async def unmute(_, m: Message):
     group_call.set_is_mute(False)
     await m.reply_text(f"{emoji.SPEAKER_MEDIUM_VOLUME} Unmuted")
 
-@Client.on_message(filters.command("playlist"))
+@Client.on_message(filters.command(["playlist", f"playlist@{U}"]))
 async def show_playlist(_, m: Message):
     group_call = mp.group_call
     if not group_call.is_connected:
         await m.reply_text("No active Voicechat.")
         return
     if not playlist:
-        pl = f"{emoji.NO_ENTRY} Empty Playlist"
+        pl = f"{emoji.NO_ENTRY} Empty Playlist."
     else:
         pl = f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
             f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
@@ -456,8 +495,8 @@ async def show_playlist(_, m: Message):
             ])
     await m.reply_text(pl)
 
-admincmds=["join", "unmute", "mute", "leave", "clean", "vc", "pause", "resume", "stop", "skip", "radio", "stopradio", "replay", "restart"]
+admincmds=["join", "unmute", "mute", "leave", "clean", "vc", "pause", "resume", "stop", "skip", "radio", "stopradio", "replay", "restart", f"join@{U}", f"unmute@{U}", f"mute@{U}", f"leave@{U}", f"clean@{U}", f"vc@{U}", f"pause@{U}", f"resume@{U}", f"stop@{U}", f"skip@{U}", f"radio@{U}", f"stopradio@{U}", f"replay@{U}", f"restart@{U}"]
 
 @Client.on_message(filters.command(admincmds) & ~filters.user(ADMINS))
 async def notforu(_, m: Message):
-    await m.reply("Who the hell you are")
+    await m.reply("Who the hell you are?.")

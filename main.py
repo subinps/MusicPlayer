@@ -21,13 +21,9 @@
 #SOFTWARE.
 from pyrogram import Client, idle, filters
 import os
-from threading import Thread
-import sys
 from config import Config
-from utils import mp
-import asyncio
+from utils import mp, USERNAME
 from pyrogram.raw import functions, types
-
 
 CHAT=Config.CHAT
 bot = Client(
@@ -41,14 +37,8 @@ if not os.path.isdir("./downloads"):
     os.makedirs("./downloads")
 async def main():
     async with bot:
-        await mp.startupradio()
-        await asyncio.sleep(2)
-        await mp.startupradio()
+        await mp.start_radio()
 
-def stop_and_restart():
-        bot.stop()
-        os.execl(sys.executable, sys.executable, *sys.argv)
-    
 bot.run(main())
 bot.start()
 bot.send(
@@ -137,14 +127,6 @@ bot.send(
         ]
     )
 )
-
-
-@bot.on_message(filters.command("restart") & filters.user(Config.ADMINS))
-def restart(client, message):
-    message.reply_text("Restarting...")
-    Thread(
-        target=stop_and_restart
-        ).start()
 
 idle()
 bot.stop()

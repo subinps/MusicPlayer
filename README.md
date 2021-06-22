@@ -16,7 +16,7 @@ License -> https://github.com/subinps/MusicPlayer/blob/master/LICENSE
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/subinps/MusicPlayer)
 
-
+NOTE: Make sure you have started a VoiceChat in your Group before deploying.
 ### Deploy to VPS
 
 ```sh
@@ -36,7 +36,9 @@ python3 main.py
 6. `LOG_GROUP` : Group to send Playlist, if CHAT is a Group
 7. `ADMINS` : ID of users who can use admin commands.
 8. `ARQ_API` : Get it for free from [@ARQRobot](https://telegram.dog/ARQRobot), This is required for /dplay to work.
-8. `STREAM_URL` : Stream URL of radio station or a youtube live video to stream when the bot starts or with /radio command.
+9. `STREAM_URL` : Stream URL of radio station or a youtube live video to stream when the bot starts or with /radio command.
+10. `DUR` : Maximum duration of song to play.(Optional)
+11. `ADMIN_ONLY` : Pass `Y` If you want to make /play and /dplay commands only for admins of `CHAT`. By default /play and /dplay is available for all.
 
 - Enable the worker after deploy the project to Heroku
 - Bot will starts radio automatically in given `CHAT` with given `STREAM_URL` after deploy.(24*7 Music even if heroku restarts, radio stream restarts automatically.)  
@@ -66,5 +68,5 @@ Fork the repo, Do not Import code.
 Connect Me On [Telegram](https://telegram.dog/subinps_bot)
 
 ## Credits 
-- [Dash Eclipse's](https://github.com/dashezup) for his[tgvc-userbot](https://github.com/callsmusic/tgvc-userbot).
+- [Dash Eclipse's](https://github.com/dashezup) for his [tgvc-userbot](https://github.com/callsmusic/tgvc-userbot).
 

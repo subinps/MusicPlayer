@@ -1,0 +1,6 @@
+
+*.pyc
+*.raw
+*.log
+*.session
+unknown_errors.txt
