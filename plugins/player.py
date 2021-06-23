@@ -131,10 +131,11 @@ async def yplay(_, message: Message):
                 f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
                 for i, x in enumerate(playlist)
                 ])
-        await message.reply_text(pl)
+        if LOG_GROUP and message.chat.id != LOG_GROUP:
+            await message.reply_text(pl)
         for track in playlist[:2]:
             await mp.download_audio(track)
-        if LOG_GROUP and message.chat.id != LOG_GROUP:
+        if LOG_GROUP:
             await mp.send_playlist()
     if type=="youtube" or type=="query":
         if type=="youtube":
@@ -193,6 +194,8 @@ async def yplay(_, message: Message):
 
             await m_status.delete()
             print(f"- START PLAYING: {playlist[0][1]}")
+        else:
+            await msg.delete()
         if not playlist:
             pl = f"{emoji.NO_ENTRY} Empty playlist"
         else:
@@ -200,10 +203,11 @@ async def yplay(_, message: Message):
                 f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
                 for i, x in enumerate(playlist)
                 ])
-        await message.reply_text(pl)
+        if LOG_GROUP and message.chat.id != LOG_GROUP:
+            await message.reply_text(pl)
         for track in playlist[:2]:
             await mp.download_audio(track)
-        if LOG_GROUP and message.chat.id != LOG_GROUP:
+        if LOG_GROUP:
             await mp.send_playlist()
             
         
@@ -266,6 +270,8 @@ async def deezer(_, message):
         )
         await m_status.delete()
         print(f"- START PLAYING: {playlist[0][1]}")
+    else:
+        await msg.delete()
     if not playlist:
         pl = f"{emoji.NO_ENTRY} Empty playlist"
     else:
@@ -321,9 +327,10 @@ async def skip_track(_, m: Message):
             pl = f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
             f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
             for i, x in enumerate(playlist)
-            ])            
-        await m.reply_text(pl)
+            ])
         if LOG_GROUP and m.chat.id != LOG_GROUP:
+            await m.reply_text(pl)
+        if LOG_GROUP:
             await mp.send_playlist()
     else:
         try:
@@ -346,8 +353,9 @@ async def skip_track(_, m: Message):
                     f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
                     for i, x in enumerate(playlist)
                     ])
-            await m.reply_text(pl)
             if LOG_GROUP and m.chat.id != LOG_GROUP:
+                await m.reply_text(pl)
+            if LOG_GROUP:
                 await mp.send_playlist()
         except (ValueError, TypeError):
             await m.reply_text(f"{emoji.NO_ENTRY} Invalid input",
