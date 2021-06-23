@@ -56,6 +56,7 @@ async def yplay(_, message: Message):
             admins.append(administrator.user.id)
         if message.from_user.id not in admins:
             await message.reply_sticker("CAADBQADsQIAAtILIVYld1n74e3JuQI")
+            await message.delete()
             return
     type=""
     yturl=""
@@ -92,7 +93,7 @@ async def yplay(_, message: Message):
     group_call = mp.group_call
     if type=="audio":
         if round(m_audio.audio.duration / 60) > DURATION_LIMIT:
-            await message.reply_text(f"❌ Videos longer than {DURATION_LIMIT} minute(s) aren't allowed, the provided video is {round(m_audio.audio.duration/60)} minute(s)")
+            await message.reply_text(f"❌ Audios longer than {DURATION_LIMIT} minute(s) aren't allowed, the provided audio is {round(m_audio.audio.duration/60)} minute(s)")
             return
         if playlist and playlist[-1][2] \
                 == m_audio.audio.file_id:
@@ -137,6 +138,8 @@ async def yplay(_, message: Message):
             await mp.download_audio(track)
         if LOG_GROUP:
             await mp.send_playlist()
+        else:
+            await message.reply_text(pl)
     if type=="youtube" or type=="query":
         if type=="youtube":
             ytquery=yturl
@@ -209,6 +212,9 @@ async def yplay(_, message: Message):
             await mp.download_audio(track)
         if LOG_GROUP:
             await mp.send_playlist()
+        else:
+            await message.reply_text(pl)
+    await message.delete()
             
         
    
@@ -221,6 +227,7 @@ async def deezer(_, message):
             admins.append(administrator.user.id)
         if message.from_user.id not in admins:
             await message.reply_sticker("CAADBQADsQIAAtILIVYld1n74e3JuQI")
+            await message.delete()
             return
     user=f"[{message.from_user.first_name}](tg://user?id={message.from_user.id})"
     if " " in message.text:
@@ -285,6 +292,10 @@ async def deezer(_, message):
         await mp.download_audio(track)
     if LOG_GROUP:
         await mp.send_playlist()
+    else:
+        await message.reply_text(pl)
+    await message.delete()
+
 
 
 @Client.on_message(filters.command(["player", f"player@{U}"]))
@@ -312,6 +323,7 @@ async def player(_, m: Message):
 			]
 			)
     )
+    await m.delete()
 
 @Client.on_message(filters.command(["skip", f"skip@{U}"]) & filters.user(ADMINS))
 async def skip_track(_, m: Message):
@@ -332,6 +344,8 @@ async def skip_track(_, m: Message):
             await m.reply_text(pl)
         if LOG_GROUP:
             await mp.send_playlist()
+        else:
+            await m.reply_text(pl)
     else:
         try:
             items = list(dict.fromkeys(m.command[1:]))
@@ -357,9 +371,12 @@ async def skip_track(_, m: Message):
                 await m.reply_text(pl)
             if LOG_GROUP:
                 await mp.send_playlist()
+            else:
+                await m.reply_text(pl)
         except (ValueError, TypeError):
             await m.reply_text(f"{emoji.NO_ENTRY} Invalid input",
                                        disable_web_page_preview=True)
+    await m.delete()
 
 
 @Client.on_message(filters.command(["join", f"join@{U}"]) & filters.user(ADMINS))
@@ -371,6 +388,7 @@ async def join_group_call(client, m: Message):
     await mp.start_call()
     chat = await client.get_chat(CHAT)
     await m.reply_text(f"Succesfully Joined Voice Chat in {chat.title}")
+    await m.delete()
 
 
 @Client.on_message(filters.command("leave") & filters.user(ADMINS))
@@ -385,6 +403,7 @@ async def leave_voice_chat(_, m: Message):
     group_call.input_filename = ''
     await group_call.stop()
     await m.reply_text("Left the VoiceChat")
+    await m.delete()
 
 
 @Client.on_message(filters.command(["vc", f"vc@{U}"]) & filters.user(ADMINS))
@@ -400,6 +419,7 @@ async def list_voice_chat(client, m: Message):
     else:
         await m.reply_text(emoji.NO_ENTRY
                                    + "Didn't join any voice chat yet")
+    await m.delete()
 
 
 @Client.on_message(filters.command(["stop", f"stop@{U}"]) & filters.user(ADMINS))
@@ -413,6 +433,7 @@ async def stop_playing(_, m: Message):
     group_call.stop_playout()
     await m.reply_text(f"{emoji.STOP_BUTTON} Stopped playing")
     playlist.clear()
+    await m.delete()
 
 
 @Client.on_message(filters.command(["replay", f"replay@{U}"]) & filters.user(ADMINS))
@@ -429,6 +450,7 @@ async def restart_playing(_, m: Message):
         f"{emoji.COUNTERCLOCKWISE_ARROWS_BUTTON}  "
         "Playing from the beginning..."
     )
+    await m.delete()
 
 
 @Client.on_message(filters.command(["pause", f"pause@{U}"]) & filters.user(ADMINS))
@@ -440,6 +462,7 @@ async def pause_playing(_, m: Message):
     mp.group_call.pause_playout()
     await m.reply_text(f"{emoji.PLAY_OR_PAUSE_BUTTON} Paused",
                                quote=False)
+    await m.delete()
 
 
 
@@ -467,6 +490,7 @@ async def clean_raw_pcm(client, m: Message):
                 count += 1
                 os.remove(os.path.join(download_dir, fn))
     await m.reply_text(f"{emoji.WASTEBASKET} Cleaned {count} files")
+    await m.delete()
 
 
 @Client.on_message(filters.command(["mute", f"mute@{U}"]) & filters.user(ADMINS))
@@ -477,7 +501,7 @@ async def mute(_, m: Message):
         return
     group_call.set_is_mute(True)
     await m.reply_text(f"{emoji.MUTED_SPEAKER} Muted")
-
+    await m.delete()
 
 @Client.on_message(filters.command(["unmute", f"unmute@{U}"]) & filters.user(ADMINS))
 async def unmute(_, m: Message):
@@ -487,6 +511,7 @@ async def unmute(_, m: Message):
         return
     group_call.set_is_mute(False)
     await m.reply_text(f"{emoji.SPEAKER_MEDIUM_VOLUME} Unmuted")
+    await m.delete()
 
 @Client.on_message(filters.command(["playlist", f"playlist@{U}"]))
 async def show_playlist(_, m: Message):
@@ -502,9 +527,11 @@ async def show_playlist(_, m: Message):
             for i, x in enumerate(playlist)
             ])
     await m.reply_text(pl)
+    await m.delete()
 
 admincmds=["join", "unmute", "mute", "leave", "clean", "vc", "pause", "resume", "stop", "skip", "radio", "stopradio", "replay", "restart", f"join@{U}", f"unmute@{U}", f"mute@{U}", f"leave@{U}", f"clean@{U}", f"vc@{U}", f"pause@{U}", f"resume@{U}", f"stop@{U}", f"skip@{U}", f"radio@{U}", f"stopradio@{U}", f"replay@{U}", f"restart@{U}"]
 
 @Client.on_message(filters.command(admincmds) & ~filters.user(ADMINS))
 async def notforu(_, m: Message):
     await m.reply("Who the hell you are?.")
+

@@ -84,6 +84,7 @@ async def start(client, message):
     ]
     reply_markup = InlineKeyboardMarkup(buttons)
     await message.reply(HOME_TEXT.format(message.from_user.first_name, message.from_user.id), reply_markup=reply_markup)
+    await message.delete()
 
 
 
@@ -104,7 +105,10 @@ async def show_help(client, message):
         HELP,
         reply_markup=reply_markup
         )
+    await message.delete()
 @Client.on_message(filters.command(["restart", f"restart@{U}"]) & filters.user(Config.ADMINS))
 async def restart(client, message):
     await message.reply_text("🔄 Restarting...")
+    await message.delete()
     os.execl(sys.executable, sys.executable, *sys.argv)
+    

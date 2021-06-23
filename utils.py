@@ -74,6 +74,7 @@ class MusicPlayer(object):
         self.group_call = GroupCall(USER, path_to_log_file='')
         self.chat_id = None
 
+
     async def send_playlist(self):
         if not playlist:
             pl = f"{emoji.NO_ENTRY} Empty playlist"
@@ -129,8 +130,8 @@ class MusicPlayer(object):
         client = group_call.client
         raw_file = os.path.join(client.workdir, DEFAULT_DOWNLOAD_DIR,
                                 f"{song[1]}.raw")
-        if os.path.exists(raw_file):
-            os.remove(raw_file)
+        #if os.path.exists(raw_file):
+            #os.remove(raw_file)
         if not os.path.isfile(raw_file):
             # credits: https://t.me/c/1480232458/6825
             #os.mkfifo(raw_file)

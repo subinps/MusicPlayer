@@ -34,6 +34,7 @@ async def radio(client, message: Message):
         return
     await mp.start_radio()
     await message.reply_text(f"Started Radio: <code>{STREAM}</code>")
+    await message.delete()
 
 @Client.on_message(filters.command(['stopradio', f"stopradio@{USERNAME}"]) & filters.user(ADMINS))
 async def stop(_, message: Message):
@@ -42,3 +43,4 @@ async def stop(_, message: Message):
         return
     await mp.stop_radio()
     await message.reply_text("Radio stream ended.")
+    await message.delete()
