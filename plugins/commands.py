@@ -21,12 +21,13 @@
 #SOFTWARE.
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from pyrogram import Client, filters
-from utils import USERNAME
+import signal
+from utils import USERNAME, FFMPEG_PROCESSES
 from config import Config
 import os
 import sys
 U=USERNAME
-
+CHAT=Config.CHAT
 
 HOME_TEXT = "<b>Helo, [{}](tg://user?id={})\n\nIam MusicPlayer 2.0 which plays music in Channels and Groups 24*7.\n\nI can even Stream Youtube Live in Your Voicechat.\n\nDeploy Your Own bot from source code below.\n\nHit /help to know about available commands.</b>"
 HELP = """
@@ -110,5 +111,8 @@ async def show_help(client, message):
 async def restart(client, message):
     await message.reply_text("🔄 Restarting...")
     await message.delete()
+    process = FFMPEG_PROCESSES.get(CHAT)
+    if process:
+        process.send_signal(signal.SIGTERM) 
     os.execl(sys.executable, sys.executable, *sys.argv)
     
