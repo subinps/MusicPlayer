@@ -54,7 +54,7 @@ class Config:
     STREAM_URL=finalurl
     ADMIN_ONLY=os.environ.get("ADMIN_ONLY", "N")
     ARQ_API=os.environ.get("ARQ_API", "")
-    DURATION_LIMIT=int(os.environ.get("DUR", 15))
+    DURATION_LIMIT=int(os.environ.get("MAXIMUM_DURATION", 15))
     API_HASH = os.environ.get("API_HASH", "")
     BOT_TOKEN = os.environ.get("BOT_TOKEN", "") 
     SESSION = os.environ.get("SESSION_STRING", "")

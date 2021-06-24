@@ -46,6 +46,16 @@
       "description": "ID of Users who can use Admin commands(for multiple users seperated by space)",
       "required": true
     },
+    "ADMIN_ONLY": {
+      "description": "Change it to 'N' if you want to make /play and /dplay available for everyone. By default only admins of CHAT can use it.",
+      "value": "Y",
+      "required": false
+    },
+    "MAXIMUM_DURATION": {
+      "description": "Maximum duration of song to be played using /play or /dplay",
+      "value": "15",
+      "required": false
+    },
     "STREAM_URL": {
       "description": "URL of Radio station or Youtube live video url to stream with /radio command",
       "value": "https://youtu.be/zcrUCvBD16k",
