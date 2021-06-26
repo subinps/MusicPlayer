@@ -54,10 +54,11 @@ class Config:
     STREAM_URL=finalurl
     ADMIN_ONLY=os.environ.get("ADMIN_ONLY", "N")
     ARQ_API=os.environ.get("ARQ_API", "")
+    REPLY_MESSAGE=os.environ.get("REPLY_MESSAGE", None)
     DURATION_LIMIT=int(os.environ.get("MAXIMUM_DURATION", 15))
     API_HASH = os.environ.get("API_HASH", "")
     BOT_TOKEN = os.environ.get("BOT_TOKEN", "") 
-    SESSION = os.environ.get("SESSION_STRING", "")
+    SESSION = os.environ.get("SESSION_STRING", "SESSION")
     playlist=[]
     msg = {}
 
