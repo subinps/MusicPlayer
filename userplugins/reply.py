@@ -25,14 +25,11 @@ from utils import USERNAME
 from config import Config
 ADMINS=Config.ADMINS
 from pyrogram.errors import BotInlineDisabled
-pm={}
 @Client.on_message(filters.private & ~filters.bot & filters.incoming & ~filters.service & ~filters.me)
 async def reply(client, message): 
     try:
         inline = await client.get_inline_bot_results(USERNAME, "ORU_MANDAN_PM_VANNU")
-        if pm.get('cache') is not None:
-            await pm['cache'].delete()
-        pm['cache'] = await client.send_inline_bot_result(
+        await client.send_inline_bot_result(
             message.chat.id,
             query_id=inline.query_id,
             result_id=inline.results[0].id,
