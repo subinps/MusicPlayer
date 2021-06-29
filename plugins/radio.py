@@ -24,23 +24,29 @@ from pyrogram.types import Message
 from utils import mp, RADIO, USERNAME
 from config import Config
 from config import STREAM
-
+CHAT=Config.CHAT
 ADMINS=Config.ADMINS
 
-@Client.on_message(filters.command(["radio", f"radio@{USERNAME}"]) & filters.user(ADMINS))
+@Client.on_message(filters.command(["radio", f"radio@{USERNAME}"]) & filters.user(ADMINS) & (filters.chat(CHAT) | filters.private))
 async def radio(client, message: Message):
     if 1 in RADIO:
-        await message.reply_text("Kindly stop existing Radio Stream /stopradio")
+        k=await message.reply_text("Kindly stop existing Radio Stream /stopradio")
+        await mp.delete(k)
+        await message.delete()
         return
     await mp.start_radio()
-    await message.reply_text(f"Started Radio: <code>{STREAM}</code>")
+    k=await message.reply_text(f"Started Radio: <code>{STREAM}</code>")
+    await mp.delete(k)
     await message.delete()
 
-@Client.on_message(filters.command(['stopradio', f"stopradio@{USERNAME}"]) & filters.user(ADMINS))
+@Client.on_message(filters.command(['stopradio', f"stopradio@{USERNAME}"]) & filters.user(ADMINS) & (filters.chat(CHAT) | filters.private))
 async def stop(_, message: Message):
     if 0 in RADIO:
-        await message.reply_text("Kindly start Radio First /radio")
+        k=await message.reply_text("Kindly start Radio First /radio")
+        await mp.delete(k)
+        await message.delete()
         return
     await mp.stop_radio()
-    await message.reply_text("Radio stream ended.")
+    k=await message.reply_text("Radio stream ended.")
+    await mp.delete(k)
     await message.delete()

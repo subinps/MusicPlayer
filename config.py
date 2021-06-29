@@ -29,7 +29,7 @@ ydl_opts = {
 ydl = YoutubeDL(ydl_opts)
 links=[]
 finalurl=""
-STREAM=os.environ.get("STREAM_URL", "http://node-25.zeno.fm/kezsc0y2wwzuv?listening-from-radio-garden=1622271954020&rj-ttl=5&rj-tok=AAABec5bAE4Aj31dmRAEFgcbvw")
+STREAM=os.environ.get("STREAM_URL", "https://eu10.fastcast4u.com/clubfmuae")
 regex = r"^(https?\:\/\/)?(www\.youtube\.com|youtu\.?be)\/.+"
 match = re.match(regex,STREAM)
 if match:
@@ -55,10 +55,15 @@ class Config:
     ADMIN_ONLY=os.environ.get("ADMIN_ONLY", "N")
     ARQ_API=os.environ.get("ARQ_API", "")
     REPLY_MESSAGE=os.environ.get("REPLY_MESSAGE", None)
+    if REPLY_MESSAGE:
+        REPLY_MESSAGE=REPLY_MESSAGE
+    else:
+        REPLY_MESSAGE=None
     DURATION_LIMIT=int(os.environ.get("MAXIMUM_DURATION", 15))
+    DELAY = int(os.environ.get("DELAY", 10))
     API_HASH = os.environ.get("API_HASH", "")
     BOT_TOKEN = os.environ.get("BOT_TOKEN", "") 
-    SESSION = os.environ.get("SESSION_STRING", "SESSION")
+    SESSION = os.environ.get("SESSION_STRING", "")
     playlist=[]
     msg = {}
 

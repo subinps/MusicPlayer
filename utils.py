@@ -27,6 +27,7 @@ from pyrogram.methods.messages.download_media import DEFAULT_DOWNLOAD_DIR
 from pytgcalls import GroupCall
 import signal
 import wget
+from asyncio import sleep
 from pyrogram import Client
 from youtube_dl import YoutubeDL
 from os import path
@@ -49,6 +50,7 @@ FFMPEG_PROCESSES = {}
 RADIO={6}
 LOG_GROUP=Config.LOG_GROUP
 DURATION_LIMIT=Config.DURATION_LIMIT
+DELAY=Config.DELAY
 playlist=Config.playlist
 msg=Config.msg
 
@@ -185,10 +187,24 @@ class MusicPlayer(object):
         ).overwrite_output().run_async()
         FFMPEG_PROCESSES[CHAT] = process
         while True:
+            await sleep(5)
             if os.path.isfile(group_call.input_filename):
                 await group_call.start(CHAT)
                 break
             else:
+                print("No File Found\nSleeping")
+                process = FFMPEG_PROCESSES.get(CHAT)
+                if process:
+                    process.send_signal(signal.SIGTERM)
+                await sleep(2)
+                process = ffmpeg.input(station_stream_url).output(
+                    group_call.input_filename,
+                    format='s16le',
+                    acodec='pcm_s16le',
+                    ac=2,
+                    ar='48k'
+                    ).overwrite_output().run_async()
+                FFMPEG_PROCESSES[CHAT] = process
                 continue
 
     async def stop_radio(self):
@@ -211,6 +227,14 @@ class MusicPlayer(object):
     async def start_call(self):
         group_call = mp.group_call
         await group_call.start(CHAT)
+    
+    async def delete(self, message):
+        if message.chat.type == "supergroup":
+            await sleep(DELAY)
+            try:
+                await message.delete()
+            except:
+                pass
         
 
 

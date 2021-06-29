@@ -19,10 +19,10 @@
 #LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
-from pyrogram import Client, idle, filters
+from pyrogram import Client, idle
 import os
 from config import Config
-from utils import mp, USERNAME
+from utils import mp
 from pyrogram.raw import functions, types
 
 CHAT=Config.CHAT
