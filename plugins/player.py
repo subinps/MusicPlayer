@@ -145,9 +145,11 @@ async def yplay(_, message: Message):
             await message.reply_text(pl)        
         elif LOG_GROUP:
             await mp.send_playlist()
-        else:
+        elif not LOG_GROUP and message.chat.type == "supergroup":
             k=await message.reply_text(pl)
             await mp.delete(k)
+
+
     if type=="youtube" or type=="query":
         if type=="youtube":
             msg = await message.reply_text("⚡️ **Fetching Song From YouTube...**")
@@ -224,7 +226,7 @@ async def yplay(_, message: Message):
             await message.reply_text(pl)
         if LOG_GROUP:
             await mp.send_playlist()
-        else:
+        elif not LOG_GROUP and message.chat.type == "supergroup":
             k=await message.reply_text(pl)
             await mp.delete(k)
     await message.delete()
@@ -312,7 +314,7 @@ async def deezer(_, message):
         await mp.download_audio(track)
     if LOG_GROUP:
         await mp.send_playlist()
-    else:
+    elif not LOG_GROUP and message.chat.type == "supergroup":
         k=await message.reply_text(pl)
         await mp.delete(k)
     await message.delete()

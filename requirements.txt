@@ -1,8 +1,8 @@
-Pyrogram==1.2.9
-TgCrypto==1.2.2
+Pyrogram
+TgCrypto
 ffmpeg-python
 psutil
-pytgcalls
+pytgcalls[pyrogram]
 wheel
 python-arq
 aiohttp==3.6.2

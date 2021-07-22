@@ -24,7 +24,7 @@ from config import Config
 import ffmpeg
 from pyrogram import emoji
 from pyrogram.methods.messages.download_media import DEFAULT_DOWNLOAD_DIR
-from pytgcalls import GroupCall
+from pytgcalls import GroupCallFactory
 import signal
 import wget
 from asyncio import sleep
@@ -54,7 +54,6 @@ DELAY=Config.DELAY
 playlist=Config.playlist
 msg=Config.msg
 
-
 ydl_opts = {
     "format": "bestaudio[ext=m4a]",
     "geo-bypass": True,
@@ -74,9 +73,7 @@ def youtube(url: str) -> str:
 
 class MusicPlayer(object):
     def __init__(self):
-        self.group_call = GroupCall(USER, path_to_log_file='')
-        self.chat_id = None
-
+        self.group_call = GroupCallFactory(USER, GroupCallFactory.MTPROTO_CLIENT_TYPE.PYROGRAM).get_file_group_call()
 
     async def send_playlist(self):
         if not playlist:
@@ -89,7 +86,6 @@ class MusicPlayer(object):
         if msg.get('playlist') is not None:
             await msg['playlist'].delete()
         msg['playlist'] = await self.send_text(pl)
-
     async def skip_current_playing(self):
         group_call = self.group_call
         if not playlist:
@@ -205,6 +201,7 @@ class MusicPlayer(object):
                     ar='48k'
                     ).overwrite_output().run_async()
                 FFMPEG_PROCESSES[CHAT] = process
+                await sleep(5)
                 continue
 
     async def stop_radio(self):
@@ -243,14 +240,6 @@ mp = MusicPlayer()
 
 
 # pytgcalls handlers
-
-@mp.group_call.on_network_status_changed
-async def network_status_changed_handler(gc: GroupCall, is_connected: bool):
-    if is_connected:
-        mp.chat_id = int("-100" + str(gc.full_chat.id))
-    else:
-        mp.chat_id = None
-
 
 @mp.group_call.on_playout_ended
 async def playout_ended_handler(_, __):
