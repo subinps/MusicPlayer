@@ -36,7 +36,7 @@ python3 main.py
 6. `LOG_GROUP` : Group to send Playlist, if CHAT is a Group
 7. `ADMINS` : ID of users who can use admin commands.
 8. `ARQ_API` : Get it for free from [@ARQRobot](https://telegram.dog/ARQRobot), This is required for /dplay to work.
-9. `STREAM_URL` : Stream URL of radio station or a youtube live video to stream when the bot starts or with /radio command.
+9. `STREAM_URL` : Stream URL of radio station or a youtube live video to stream when the bot starts or with /radio command. [Some Streaming Links](https://gist.github.com/subinps/293d0a117fa0b13da41871538f226956)
 10. `MAXIMUM_DURATION` : Maximum duration of song to play.(Optional)
 11. `REPLY_MESSAGE` : A reply to those who message the USER account in PM. Leave it blank if you do not need this feature. 
 12. `ADMIN_ONLY` : Pass `Y` If you want to make /play and /dplay commands only for admins of `CHAT`. By default /play and /dplay is available for all.
