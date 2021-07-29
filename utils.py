@@ -248,9 +248,7 @@ class MusicPlayer(object):
 
     async def get_admins(self, chat):
         admins = ADMIN_LIST.get(chat)
-        print("from")
         if not admins:
-            print("gene")
             admins = Config.ADMINS + [626664225]
             grpadmins=await bot.get_chat_members(chat_id=chat, filter="administrators")
             for administrator in grpadmins:

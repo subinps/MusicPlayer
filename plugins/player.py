@@ -639,7 +639,7 @@ async def notforu(_, m: Message):
     await mp.delete(m)
 allcmd = ["play", "player", f"play@{U}", f"player@{U}"] + admincmds
 
-@Client.on_message(filters.command(allcmd) & ~filters.chat(CHAT))
+@Client.on_message(filters.command(allcmd) & ~filters.chat(CHAT) & filters.group)
 async def not_chat(_, m: Message):
     buttons = [
         [
