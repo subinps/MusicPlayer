@@ -31,7 +31,8 @@ from Python_ARQ import ARQ
 from youtube_search import YoutubeSearch
 from pyrogram import Client
 from aiohttp import ClientSession
-import signal
+import subprocess
+from signal import SIGINT
 import re
 U=USERNAME
 EDIT_TITLE=Config.EDIT_TITLE
@@ -131,7 +132,10 @@ async def yplay(_, message: Message):
                     RADIO.add(0)
                 process = FFMPEG_PROCESSES.get(CHAT)
                 if process:
-                    process.send_signal(signal.SIGTERM)
+                    try:
+                        process.send_signal(SIGINT)
+                    except subprocess.TimeoutExpired:
+                        process.kill()
             if not group_call.is_connected:
                 await mp.start_call()
             file=playlist[0][1]
@@ -212,7 +216,10 @@ async def yplay(_, message: Message):
                     RADIO.add(0)
                 process = FFMPEG_PROCESSES.get(CHAT)
                 if process:
-                    process.send_signal(signal.SIGTERM)
+                    try:
+                        process.send_signal(SIGINT)
+                    except subprocess.TimeoutExpired:
+                        process.kill()
             if not group_call.is_connected:
                 await mp.start_call()
             file=playlist[0][1]
@@ -300,7 +307,10 @@ async def deezer(_, message):
                 RADIO.add(0)
             process = FFMPEG_PROCESSES.get(CHAT)
             if process:
-                process.send_signal(signal.SIGTERM)
+                try:
+                    process.send_signal(SIGINT)
+                except subprocess.TimeoutExpired:
+                    process.kill()
         if not group_call.is_connected:
             await mp.start_call()
         file=playlist[0][1]
