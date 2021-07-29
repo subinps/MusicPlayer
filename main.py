@@ -117,6 +117,10 @@ bot.send(
                 description="Mute in VC"
             ),
             types.BotCommand(
+                command="volume",
+                description="Set volume between 0-200"
+            ),
+            types.BotCommand(
                 command="unmute",
                 description="Unmute in VC"
             ),

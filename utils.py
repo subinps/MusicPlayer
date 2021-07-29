@@ -31,6 +31,7 @@ from pyrogram import Client
 from youtube_dl import YoutubeDL
 from os import path
 import subprocess
+import asyncio
 from signal import SIGINT
 from pyrogram.raw.types import InputGroupCall
 from pyrogram.raw.functions.phone import EditGroupCallTitle
@@ -185,13 +186,17 @@ class MusicPlayer(object):
             os.remove(group_call.input_filename)
         # credits: https://t.me/c/1480232458/6825
         os.mkfifo(group_call.input_filename)
-        ffmpeg_log = open("ffmpeg.log", "w+")
-        process = subprocess.Popen(
-            ["ffmpeg", "-y", "-i", station_stream_url, "-f", "s16le", "-ac", "2",
-            "-ar", "48000", "-acodec", "pcm_s16le", group_call.input_filename],
-            stderr=subprocess.STDOUT, stdout=ffmpeg_log,
-            )
         await group_call.start(CHAT)
+        ffmpeg_log = open("ffmpeg.log", "w+")
+        command=["ffmpeg", "-y", "-i", station_stream_url, "-f", "s16le", "-ac", "2",
+        "-ar", "48000", "-acodec", "pcm_s16le", group_call.input_filename]
+        
+        process = await asyncio.create_subprocess_exec(
+            *command,
+            stdout=ffmpeg_log,
+            stderr=asyncio.subprocess.STDOUT,
+            )
+        
         FFMPEG_PROCESSES[CHAT] = process
         if RADIO_TITLE:
             await self.edit_title()
@@ -213,7 +218,6 @@ class MusicPlayer(object):
         if process:
             try:
                 process.send_signal(SIGINT)
-                process.wait(timeout=5)
             except subprocess.TimeoutExpired:
                 process.kill()
 

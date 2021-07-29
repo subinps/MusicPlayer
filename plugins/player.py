@@ -610,6 +610,25 @@ async def unmute(_, m: Message):
     await mp.delete(k)
     await mp.delete(m)
 
+
+@Client.on_message(filters.command(['volume', f'volume@{U}']) & admin_filter & (filters.chat(CHAT) | filters.private))
+async def set_vol(_, m: Message):
+    group_call = mp.group_call
+    if not group_call.is_connected:
+        k=await m.reply_text("Not yet joined any VC.")
+        await mp.delete(k)
+        await mp.delete(m)
+        return
+    if len(m.command) < 2:
+        k=await m.reply_text('You forgot to pass volume (1-200).')
+        await mp.delete(k)
+        await mp.delete(m)
+        return
+    await group_call.set_my_volume(int(m.command[1]))
+    k=await m.reply_text(f"Volume set to {m.command[1]}")
+    await mp.delete(k)
+    await mp.delete(m)
+
 @Client.on_message(filters.command(["playlist", f"playlist@{U}"]) & (filters.chat(CHAT) | filters.private))
 async def show_playlist(_, m: Message):
     if not playlist:
@@ -630,7 +649,7 @@ async def show_playlist(_, m: Message):
         msg['playlist'] = await m.reply_text(pl)
     await mp.delete(m)
 
-admincmds=["join", "unmute", "mute", "leave", "clean", "vc", "pause", "resume", "stop", "skip", "radio", "stopradio", "replay", "restart", f"join@{U}", f"unmute@{U}", f"mute@{U}", f"leave@{U}", f"clean@{U}", f"vc@{U}", f"pause@{U}", f"resume@{U}", f"stop@{U}", f"skip@{U}", f"radio@{U}", f"stopradio@{U}", f"replay@{U}", f"restart@{U}"]
+admincmds=["join", "unmute", "mute", "leave", "clean", "vc", "pause", "resume", "stop", "skip", "radio", "stopradio", "replay", "restart", "volume", f"volume@{U}", f"join@{U}", f"unmute@{U}", f"mute@{U}", f"leave@{U}", f"clean@{U}", f"vc@{U}", f"pause@{U}", f"resume@{U}", f"stop@{U}", f"skip@{U}", f"radio@{U}", f"stopradio@{U}", f"replay@{U}", f"restart@{U}"]
 
 @Client.on_message(filters.command(admincmds) & ~admin_filter & (filters.chat(CHAT) | filters.private))
 async def notforu(_, m: Message):
