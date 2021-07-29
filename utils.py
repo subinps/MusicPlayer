@@ -169,7 +169,6 @@ class MusicPlayer(object):
         if process:
             try:
                 process.send_signal(SIGINT)
-                process.wait(timeout=5)
             except subprocess.TimeoutExpired:
                 process.kill()
         station_stream_url = STREAM_URL
@@ -190,7 +189,7 @@ class MusicPlayer(object):
         ffmpeg_log = open("ffmpeg.log", "w+")
         command=["ffmpeg", "-y", "-i", station_stream_url, "-f", "s16le", "-ac", "2",
         "-ar", "48000", "-acodec", "pcm_s16le", group_call.input_filename]
-        
+
         process = await asyncio.create_subprocess_exec(
             *command,
             stdout=ffmpeg_log,
