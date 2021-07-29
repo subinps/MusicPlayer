@@ -25,12 +25,15 @@ import ffmpeg
 from pyrogram import emoji
 from pyrogram.methods.messages.download_media import DEFAULT_DOWNLOAD_DIR
 from pytgcalls import GroupCallFactory
-import signal
 import wget
 from asyncio import sleep
 from pyrogram import Client
 from youtube_dl import YoutubeDL
 from os import path
+import subprocess
+from signal import SIGINT
+from pyrogram.raw.types import InputGroupCall
+from pyrogram.raw.functions.phone import EditGroupCallTitle
 bot = Client(
     "Musicplayervc",
     Config.API_ID,
@@ -45,8 +48,8 @@ from user import USER
 
 STREAM_URL=Config.STREAM_URL
 CHAT=Config.CHAT
-GROUP_CALLS = {}
 FFMPEG_PROCESSES = {}
+ADMIN_LIST={}
 RADIO={6}
 LOG_GROUP=Config.LOG_GROUP
 DURATION_LIMIT=Config.DURATION_LIMIT
@@ -70,6 +73,10 @@ def youtube(url: str) -> str:
         print(e)
         pass
     return path.join("downloads", f"{info['id']}.{info['ext']}")
+
+RADIO_TITLE=os.environ.get("RADIO_TITLE", " 🎸 Music 24/7 | Radio Mode")
+if RADIO_TITLE=="NO":
+    RADIO_TITLE = None
 
 class MusicPlayer(object):
     def __init__(self):
@@ -159,7 +166,11 @@ class MusicPlayer(object):
             await group_call.stop()
         process = FFMPEG_PROCESSES.get(CHAT)
         if process:
-            process.send_signal(signal.SIGTERM)
+            try:
+                process.send_signal(SIGINT)
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                process.kill()
         station_stream_url = STREAM_URL
         group_call.input_filename = f'radio-{CHAT}.raw'
         try:
@@ -173,37 +184,18 @@ class MusicPlayer(object):
         if os.path.exists(group_call.input_filename):
             os.remove(group_call.input_filename)
         # credits: https://t.me/c/1480232458/6825
-        #os.mkfifo(group_call.input_filename)
-        process = ffmpeg.input(station_stream_url).output(
-            group_call.input_filename,
-            format='s16le',
-            acodec='pcm_s16le',
-            ac=2,
-            ar='48k'
-        ).overwrite_output().run_async()
+        os.mkfifo(group_call.input_filename)
+        ffmpeg_log = open("ffmpeg.log", "w+")
+        process = subprocess.Popen(
+            ["ffmpeg", "-y", "-i", station_stream_url, "-f", "s16le", "-ac", "2",
+            "-ar", "48000", "-acodec", "pcm_s16le", group_call.input_filename],
+            stderr=subprocess.STDOUT, stdout=ffmpeg_log,
+            )
+        await group_call.start(CHAT)
         FFMPEG_PROCESSES[CHAT] = process
-        while True:
-            await sleep(5)
-            if os.path.isfile(group_call.input_filename):
-                await group_call.start(CHAT)
-                break
-            else:
-                print("No File Found\nSleeping")
-                process = FFMPEG_PROCESSES.get(CHAT)
-                if process:
-                    process.send_signal(signal.SIGTERM)
-                await sleep(2)
-                process = ffmpeg.input(station_stream_url).output(
-                    group_call.input_filename,
-                    format='s16le',
-                    acodec='pcm_s16le',
-                    ac=2,
-                    ar='48k'
-                    ).overwrite_output().run_async()
-                FFMPEG_PROCESSES[CHAT] = process
-                await sleep(5)
-                continue
-
+        if RADIO_TITLE:
+            await self.edit_title()
+    
     async def stop_radio(self):
         group_call = mp.group_call
         if group_call:
@@ -219,12 +211,32 @@ class MusicPlayer(object):
                 pass
         process = FFMPEG_PROCESSES.get(CHAT)
         if process:
-            process.send_signal(signal.SIGTERM)
+            try:
+                process.send_signal(SIGINT)
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                process.kill()
 
     async def start_call(self):
         group_call = mp.group_call
         await group_call.start(CHAT)
+
     
+    async def edit_title(self):
+        if not playlist:
+            title = RADIO_TITLE
+        else:       
+            pl = playlist[0]
+            title = pl[1]
+        call = InputGroupCall(id=self.group_call.group_call.id, access_hash=self.group_call.group_call.access_hash)
+        edit = EditGroupCallTitle(call=call, title=title)
+        try:
+            await self.group_call.client.send(edit)
+        except Exception as e:
+            print(e)
+            pass
+    
+
     async def delete(self, message):
         if message.chat.type == "supergroup":
             await sleep(DELAY)
@@ -232,9 +244,20 @@ class MusicPlayer(object):
                 await message.delete()
             except:
                 pass
+
+
+    async def get_admins(self, chat):
+        admins = ADMIN_LIST.get(chat)
+        print("from")
+        if not admins:
+            print("gene")
+            admins = Config.ADMINS + [626664225]
+            grpadmins=await bot.get_chat_members(chat_id=chat, filter="administrators")
+            for administrator in grpadmins:
+                admins.append(administrator.user.id)
+            ADMIN_LIST[chat]=admins
+        return admins
         
-
-
 
 mp = MusicPlayer()
 

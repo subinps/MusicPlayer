@@ -86,7 +86,7 @@ async def start(client, message):
     reply_markup = InlineKeyboardMarkup(buttons)
     m=await message.reply(HOME_TEXT.format(message.from_user.first_name, message.from_user.id), reply_markup=reply_markup)
     await mp.delete(m)
-    await message.delete()
+    await mp.delete(message)
 
 
 
@@ -109,11 +109,11 @@ async def show_help(client, message):
         HELP,
         reply_markup=reply_markup
         )
-    await message.delete()
+    await mp.delete(message)
 @Client.on_message(filters.command(["restart", f"restart@{U}"]) & filters.user(Config.ADMINS) & (filters.chat(CHAT) | filters.private))
 async def restart(client, message):
     await message.reply_text("🔄 Restarting...")
-    await message.delete()
+    await mp.delete(message)
     process = FFMPEG_PROCESSES.get(CHAT)
     if process:
         process.send_signal(signal.SIGTERM) 
