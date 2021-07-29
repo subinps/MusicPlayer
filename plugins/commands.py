@@ -124,5 +124,9 @@ async def restart(client, message):
             process.send_signal(SIGINT)
         except subprocess.TimeoutExpired:
             process.kill()
+        except Exception as e:
+            print(e)
+            pass
+        FFMPEG_PROCESSES[CHAT] = ""
     os.execl(sys.executable, sys.executable, *sys.argv)
     

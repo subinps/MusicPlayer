@@ -136,6 +136,10 @@ async def yplay(_, message: Message):
                         process.send_signal(SIGINT)
                     except subprocess.TimeoutExpired:
                         process.kill()
+                    except Exception as e:
+                        print(e)
+                        pass
+                    FFMPEG_PROCESSES[CHAT] = ""
             if not group_call.is_connected:
                 await mp.start_call()
             file=playlist[0][1]
@@ -220,6 +224,10 @@ async def yplay(_, message: Message):
                         process.send_signal(SIGINT)
                     except subprocess.TimeoutExpired:
                         process.kill()
+                    except Exception as e:
+                        print(e)
+                        pass
+                    FFMPEG_PROCESSES[CHAT] = ""
             if not group_call.is_connected:
                 await mp.start_call()
             file=playlist[0][1]
@@ -311,6 +319,10 @@ async def deezer(_, message):
                     process.send_signal(SIGINT)
                 except subprocess.TimeoutExpired:
                     process.kill()
+                except Exception as e:
+                    print(e)
+                    pass
+                FFMPEG_PROCESSES[CHAT] = ""
         if not group_call.is_connected:
             await mp.start_call()
         file=playlist[0][1]

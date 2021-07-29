@@ -171,6 +171,10 @@ class MusicPlayer(object):
                 process.send_signal(SIGINT)
             except subprocess.TimeoutExpired:
                 process.kill()
+            except Exception as e:
+                print(e)
+                pass
+            FFMPEG_PROCESSES[CHAT] = ""
         station_stream_url = STREAM_URL
         group_call.input_filename = f'radio-{CHAT}.raw'
         try:
@@ -219,6 +223,10 @@ class MusicPlayer(object):
                 process.send_signal(SIGINT)
             except subprocess.TimeoutExpired:
                 process.kill()
+            except Exception as e:
+                print(e)
+                pass
+            FFMPEG_PROCESSES[CHAT] = ""
 
     async def start_call(self):
         group_call = mp.group_call
