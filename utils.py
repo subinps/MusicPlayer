@@ -168,8 +168,6 @@ class MusicPlayer(object):
         group_call = self.group_call
         if group_call.is_connected:
             playlist.clear()   
-            group_call.input_filename = ''
-            await group_call.stop()
         process = FFMPEG_PROCESSES.get(CHAT)
         if process:
             try:
@@ -181,7 +179,7 @@ class MusicPlayer(object):
                 pass
             FFMPEG_PROCESSES[CHAT] = ""
         station_stream_url = STREAM_URL
-        group_call.input_filename = f'radio-{CHAT}.raw'
+        
         try:
             RADIO.remove(0)
         except:
@@ -190,11 +188,13 @@ class MusicPlayer(object):
             RADIO.add(1)
         except:
             pass
-        if os.path.exists(group_call.input_filename):
-            os.remove(group_call.input_filename)
+        if os.path.exists(f'radio-{CHAT}.raw'):
+            os.remove(f'radio-{CHAT}.raw')
         # credits: https://t.me/c/1480232458/6825
-        os.mkfifo(group_call.input_filename)
-        await self.start_call()
+        os.mkfifo(f'radio-{CHAT}.raw')
+        group_call.input_filename = f'radio-{CHAT}.raw'
+        if not CALL_STATUS.get(CHAT):
+            await self.start_call()
         ffmpeg_log = open("ffmpeg.log", "w+")
         command=["ffmpeg", "-y", "-i", station_stream_url, "-f", "s16le", "-ac", "2",
         "-ar", "48000", "-acodec", "pcm_s16le", group_call.input_filename]
@@ -220,6 +220,7 @@ class MusicPlayer(object):
                 print("Connecting...")
                 await self.start_call()
                 continue
+
     
     async def stop_radio(self):
         group_call = self.group_call
