@@ -35,7 +35,9 @@ import subprocess
 import asyncio
 from signal import SIGINT
 from pyrogram.raw.types import InputGroupCall
-from pyrogram.raw.functions.phone import EditGroupCallTitle
+from pyrogram.raw.functions.phone import EditGroupCallTitle, CreateGroupCall
+from random import randint
+
 bot = Client(
     "Musicplayervc",
     Config.API_ID,
@@ -210,12 +212,13 @@ class MusicPlayer(object):
             await self.edit_title()
         await sleep(2)
         while True:
+            await sleep(10)
             if CALL_STATUS.get(CHAT):
                 print("Succesfully Joined")
                 break
             else:
                 print("Connecting...")
-                await sleep(10)
+                await self.start_call()
                 continue
     
     async def stop_radio(self):
@@ -244,7 +247,18 @@ class MusicPlayer(object):
 
     async def start_call(self):
         group_call = self.group_call
-        await group_call.start(CHAT)
+        try:
+            await group_call.start(CHAT)
+        except RuntimeError:
+            await USER.send(CreateGroupCall(
+                peer=(await USER.resolve_peer(CHAT)),
+                random_id=randint(10000, 999999999)
+                )
+                )
+            await group_call.start(CHAT)
+        except Exception as e:
+            print(e)
+            pass
 
     
     async def edit_title(self):
