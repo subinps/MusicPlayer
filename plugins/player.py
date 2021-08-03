@@ -451,11 +451,11 @@ async def skip_track(_, m: Message):
             text = []
             for i in items:
                 if 2 <= i <= (len(playlist) - 1):
-                    audio = f"{playlist[i].audio.title}"
+                    audio = f"{playlist[i][1]}"
                     playlist.pop(i)
-                    text.append(f"{emoji.WASTEBASKET} {i}. **{audio}**")
+                    text.append(f"{emoji.WASTEBASKET} Succesfully Removed from Playlist- {i}. **{audio}**")
                 else:
-                    text.append(f"{emoji.CROSS_MARK} {i}")
+                    text.append(f"{emoji.CROSS_MARK} You Cant Skip First Two Songs- {i}")
             k=await m.reply_text("\n".join(text))
             await mp.delete(k)
             if not playlist:
