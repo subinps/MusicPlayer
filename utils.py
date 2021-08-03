@@ -69,15 +69,6 @@ ydl_opts = {
     "outtmpl": "downloads/%(id)s.%(ext)s",
 }
 ydl = YoutubeDL(ydl_opts)
-def youtube(url: str) -> str:
-    info = ydl.extract_info(url, False)
-    duration = round(info["duration"] / 60)
-    try:
-        ydl.download([url])
-    except Exception as e:
-        print(e)
-        pass
-    return path.join("downloads", f"{info['id']}.{info['ext']}")
 
 RADIO_TITLE=os.environ.get("RADIO_TITLE", " 🎸 Music 24/7 | Radio Mode")
 if RADIO_TITLE=="NO":
@@ -150,7 +141,18 @@ class MusicPlayer(object):
             if song[3] == "telegram":
                 original_file = await bot.download_media(f"{song[2]}")
             elif song[3] == "youtube":
-                original_file = youtube(song[2])
+                url=song[2]
+                try:
+                    info = ydl.extract_info(url, False)
+                    ydl.download([url])
+                    original_file=path.join("downloads", f"{info['id']}.{info['ext']}")
+                except Exception as e:
+                    playlist.pop(1)
+                    print(f"Unable to download due to {e} and skipped.")
+                    if len(playlist) == 1:
+                        return
+                    await self.download_audio(playlist[1])
+                    return
             else:
                 original_file=wget.download(song[2])
             ffmpeg.input(original_file).output(

@@ -2,6 +2,7 @@
   "name": "Telegram Voice Chat Music Player Bot ",
   "description": "Telegram Bot to Play Audio in Telegram Voice Chats",
   "repository": "https://github.com/subinps/MusicPlayer",
+  "stack": "container",
   "keywords": [
     "telegram",
     "bot",

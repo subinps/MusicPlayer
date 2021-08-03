@@ -160,8 +160,6 @@ async def yplay(_, message: Message):
                 ])
         if EDIT_TITLE:
             await mp.edit_title()
-        for track in playlist[:2]:
-            await mp.download_audio(track)
         if message.chat.type == "private":
             await message.reply_text(pl)        
         elif LOG_GROUP:
@@ -169,6 +167,8 @@ async def yplay(_, message: Message):
         elif not LOG_GROUP and message.chat.type == "supergroup":
             k=await message.reply_text(pl)
             await mp.delete(k)
+        for track in playlist[:2]:
+            await mp.download_audio(track)
 
 
     if type=="youtube" or type=="query":
@@ -187,6 +187,8 @@ async def yplay(_, message: Message):
                     "Song not found.\nTry inline mode.."
                 )
                 print(str(e))
+                await mp.delete(message)
+                await mp.delete(msg)
                 return
         else:
             return
@@ -195,7 +197,17 @@ async def yplay(_, message: Message):
             "nocheckcertificate": True
         }
         ydl = YoutubeDL(ydl_opts)
-        info = ydl.extract_info(url, False)
+        try:
+            info = ydl.extract_info(url, False)
+        except Exception as e:
+            print(e)
+            k=await msg.edit(
+                f"YouTube Download Error ❌\nError:- {e}"
+                )
+            print(str(e))
+            await mp.delete(message)
+            await mp.delete(k)
+            return
         duration = round(info["duration"] / 60)
         title= info["title"]
         if int(duration) > DURATION_LIMIT:
@@ -250,8 +262,6 @@ async def yplay(_, message: Message):
                 ])
         if EDIT_TITLE:
             await mp.edit_title()
-        for track in playlist[:2]:
-            await mp.download_audio(track)
         if message.chat.type == "private":
             await message.reply_text(pl)
         if LOG_GROUP:
@@ -259,6 +269,8 @@ async def yplay(_, message: Message):
         elif not LOG_GROUP and message.chat.type == "supergroup":
             k=await message.reply_text(pl)
             await mp.delete(k)
+        for track in playlist[:2]:
+            await mp.download_audio(track)
     await mp.delete(message)
             
         
@@ -346,13 +358,13 @@ async def deezer(_, message):
         await message.reply_text(pl)
     if EDIT_TITLE:
             await mp.edit_title()
-    for track in playlist[:2]:
-        await mp.download_audio(track)
     if LOG_GROUP:
         await mp.send_playlist()
     elif not LOG_GROUP and message.chat.type == "supergroup":
         k=await message.reply_text(pl)
         await mp.delete(k)
+    for track in playlist[:2]:
+        await mp.download_audio(track)
     await mp.delete(message)
 
 

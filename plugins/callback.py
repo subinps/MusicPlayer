@@ -59,15 +59,17 @@ You can also use /dplay <song name> to play a song from Deezer.</b>
 **/volume** Change volume(0-200).
 **/mute**  Mute in VC.
 **/unmute**  Unmute in VC.
-**/restart** Restarts the Bot.
+**/restart**Update restarts the Bot.
 """
+
 
 
 @Client.on_callback_query()
 async def cb_handler(client: Client, query: CallbackQuery):
-    if query.from_user.id not in Config.ADMINS and query.data != "help":
+    admins = await mp.get_admins(Config.CHAT)
+    if query.from_user.id not in admins and query.data != "help":
         await query.answer(
-            "Who the hell you are",
+            "😒 Played Joji.mp3",
             show_alert=True
             )
         return

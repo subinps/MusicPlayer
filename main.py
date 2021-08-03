@@ -19,12 +19,17 @@
 #LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
-from pyrogram import Client, idle
+import asyncio
+from pyrogram import Client, idle, filters
 import os
 from config import Config
-from utils import mp
+from utils import mp, USERNAME, FFMPEG_PROCESSES
 from pyrogram.raw import functions, types
-
+import os
+import sys
+from threading import Thread
+from signal import SIGINT
+import subprocess
 CHAT=Config.CHAT
 bot = Client(
     "Musicplayer",
@@ -38,9 +43,38 @@ if not os.path.isdir("./downloads"):
 async def main():
     async with bot:
         await mp.start_radio()
+def stop_and_restart():
+    bot.stop()
+    os.system("git pull")
+    os.execl(sys.executable, sys.executable, *sys.argv)
+
 
 bot.run(main())
 bot.start()
+
+@bot.on_message(filters.command(["restart", f"restart@{USERNAME}"]) & filters.user(Config.ADMINS) & (filters.chat(CHAT) | filters.private))
+async def restart(client, message):
+    await message.reply_text("🔄 Updating and Restarting...")
+    await asyncio.sleep(3)
+    try:
+        await message.delete()
+    except:
+        pass
+    process = FFMPEG_PROCESSES.get(CHAT)
+    if process:
+        try:
+            process.send_signal(SIGINT)
+        except subprocess.TimeoutExpired:
+            process.kill()
+        except Exception as e:
+            print(e)
+            pass
+        FFMPEG_PROCESSES[CHAT] = ""
+    Thread(
+        target=stop_and_restart
+        ).start()    
+
+
 bot.send(
     functions.bots.SetBotCommands(
         commands=[
@@ -126,7 +160,7 @@ bot.send(
             ),
             types.BotCommand(
                 command="restart",
-                description="Restart the bot"
+                description="Update and restart the bot"
             )
         ]
     )
