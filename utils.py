@@ -55,6 +55,7 @@ CHAT=Config.CHAT
 FFMPEG_PROCESSES = {}
 ADMIN_LIST={}
 CALL_STATUS={}
+EDIT_TITLE=Config.EDIT_TITLE
 RADIO={6}
 LOG_GROUP=Config.LOG_GROUP
 DURATION_LIMIT=Config.DURATION_LIMIT
@@ -106,6 +107,8 @@ class MusicPlayer(object):
         # remove old track from playlist
         old_track = playlist.pop(0)
         print(f"- START PLAYING: {playlist[0][1]}")
+        if EDIT_TITLE:
+            await self.edit_title()
         if LOG_GROUP:
             await self.send_playlist()
         os.remove(os.path.join(
