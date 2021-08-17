@@ -91,8 +91,8 @@ bot.send(
                 description="Play song from youtube/audiofile"
             ),
             types.BotCommand(
-                command="dplay",
-                description="Play song from Deezer"
+                command="splay",
+                description="Play song from JioSaavn"
             ),
             types.BotCommand(
                 command="player",
@@ -103,8 +103,20 @@ bot.send(
                 description="Shows the playlist"
             ),
             types.BotCommand(
+                command="cplay",
+                description="Plays music files from a channel."
+            ),
+            types.BotCommand(
                 command="skip",
                 description="Skip the current song"
+            ),
+            types.BotCommand(
+                command="clearplaylist",
+                description="Clears the current playlist"
+            ),
+            types.BotCommand(
+                command="shuffle",
+                description="Shuffle the playlist"
             ),
             types.BotCommand(
                 command="join",

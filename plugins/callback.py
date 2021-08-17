@@ -22,9 +22,9 @@
 
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from pyrogram import Client, emoji
-from utils import mp
+from utils import mp, playlist
 from config import Config
-playlist=Config.playlist
+
 
 HELP = """
 
@@ -34,12 +34,12 @@ Start a VoiceChat
 
 Use /play <song name> or use /play as a reply to an audio file or youtube link.
 
-You can also use /dplay <song name> to play a song from Deezer.</b>
+You can also use /splay <song name> to play a song from JioSaavn or /cplay <channel username or channel id> to play music from a telegram channel.</b>
 
 **Common Commands**:
 
 **/play**  Reply to an audio file or YouTube link to play it or use /play <song name>.
-**/dplay** Play music from Deezer, Use /dplay <song name>
+**/splay** Play music from Jio Saavn, Use /splay <song name>
 **/player**  Show current playing song.
 **/help** Show help for commands
 **/playlist** Shows the playlist.
@@ -48,10 +48,13 @@ You can also use /dplay <song name> to play a song from Deezer.</b>
 **/skip** [n] ...  Skip current or n where n >= 2
 **/join**  Join voice chat.
 **/leave**  Leave current voice chat
+**/shuffle** Shuffle Playlist.
+**/cplay** Play music from a channel's music files.
 **/vc**  Check which VC is joined.
 **/stop**  Stop playing.
 **/radio** Start Radio.
 **/stopradio** Stops Radio Stream.
+**/clearplaylist** Clear the playlist.
 **/replay**  Play from the beginning.
 **/clean** Remove unused RAW PCM files.
 **/pause** Pause playing.
@@ -59,7 +62,7 @@ You can also use /dplay <song name> to play a song from Deezer.</b>
 **/volume** Change volume(0-200).
 **/mute**  Mute in VC.
 **/unmute**  Unmute in VC.
-**/restart**Update restarts the Bot.
+**/restart** Update and restarts the Bot.
 """
 
 
@@ -83,9 +86,17 @@ async def cb_handler(client: Client, query: CallbackQuery):
         if not playlist:
             pl = f"{emoji.NO_ENTRY} Empty Playlist"
         else:
-            pl = f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
-                f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
-                for i, x in enumerate(playlist)
+            if len(playlist)>=25:
+                tplaylist=playlist[:25]
+                pl=f"Listing first 25 songs of total {len(playlist)} songs.\n"
+                pl += f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
+                    f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
+                    for i, x in enumerate(tplaylist)
+                    ])
+            else:
+                pl = f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
+                    f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}\n"
+                    for i, x in enumerate(playlist)
                 ])
         await query.edit_message_text(
                 f"{pl}",
@@ -107,11 +118,20 @@ async def cb_handler(client: Client, query: CallbackQuery):
             return
         else:
             mp.group_call.pause_playout()
-            pl = f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
-                f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
-                for i, x in enumerate(playlist)
+            if len(playlist)>=25:
+                tplaylist=playlist[:25]
+                pl=f"Listing first 25 songs of total {len(playlist)} songs.\n"
+                pl += f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
+                    f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
+                    for i, x in enumerate(tplaylist)
+                    ])
+            else:
+                pl = f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
+                    f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}\n"
+                    for i, x in enumerate(playlist)
                 ])
-        await query.edit_message_text(f"{emoji.PLAY_OR_PAUSE_BUTTON} Paused\n\n{pl}",
+        await query.edit_message_text(f"{emoji.PLAY_OR_PAUSE_BUTTON} Paused\n\n{pl},",
+        disable_web_page_preview=True,
         reply_markup=InlineKeyboardMarkup(
                     [
                         [
@@ -130,11 +150,20 @@ async def cb_handler(client: Client, query: CallbackQuery):
             return
         else:
             mp.group_call.resume_playout()
-            pl = f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
-                f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
-                for i, x in enumerate(playlist)
+            if len(playlist)>=25:
+                tplaylist=playlist[:25]
+                pl=f"Listing first 25 songs of total {len(playlist)} songs.\n"
+                pl += f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
+                    f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
+                    for i, x in enumerate(tplaylist)
+                    ])
+            else:
+                pl = f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
+                    f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}\n"
+                    for i, x in enumerate(playlist)
                 ])
         await query.edit_message_text(f"{emoji.PLAY_OR_PAUSE_BUTTON} Resumed\n\n{pl}",
+        disable_web_page_preview=True,
         reply_markup=InlineKeyboardMarkup(
                     [
                         [
@@ -152,12 +181,21 @@ async def cb_handler(client: Client, query: CallbackQuery):
             return
         else:
             await mp.skip_current_playing()
-            pl = f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
-                f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
-                for i, x in enumerate(playlist)
+            if len(playlist)>=25:
+                tplaylist=playlist[:25]
+                pl=f"Listing first 25 songs of total {len(playlist)} songs.\n"
+                pl += f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
+                    f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
+                    for i, x in enumerate(tplaylist)
+                    ])
+            else:
+                pl = f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
+                    f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}\n"
+                    for i, x in enumerate(playlist)
                 ])
         try:
             await query.edit_message_text(f"{emoji.PLAY_OR_PAUSE_BUTTON} Skipped\n\n{pl}",
+            disable_web_page_preview=True,
             reply_markup=InlineKeyboardMarkup(
                 [
                     [

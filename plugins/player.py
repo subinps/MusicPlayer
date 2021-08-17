@@ -25,29 +25,24 @@ from config import Config
 from pyrogram import Client, filters, emoji
 from pyrogram.methods.messages.download_media import DEFAULT_DOWNLOAD_DIR
 from pyrogram.types import Message
-from utils import mp, RADIO, USERNAME, FFMPEG_PROCESSES
+from utils import mp, RADIO, USERNAME, FFMPEG_PROCESSES, playlist
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from Python_ARQ import ARQ
 from youtube_search import YoutubeSearch
 from pyrogram import Client
-from aiohttp import ClientSession
 import subprocess
 from signal import SIGINT
 import re
+import requests
+import json
 U=USERNAME
 EDIT_TITLE=Config.EDIT_TITLE
 LOG_GROUP=Config.LOG_GROUP
 ADMIN_ONLY=Config.ADMIN_ONLY
 DURATION_LIMIT = Config.DURATION_LIMIT
-ARQ_API=Config.ARQ_API
-session = ClientSession()
-arq = ARQ("https://thearq.tech",ARQ_API,session)
-playlist=Config.playlist
 msg = Config.msg
 ADMINS=Config.ADMINS
 CHAT=Config.CHAT
 LOG_GROUP=Config.LOG_GROUP
-playlist=Config.playlist
 
 async def is_admin(_, client, message: Message):
     admins = await mp.get_admins(CHAT)
@@ -154,18 +149,26 @@ async def yplay(_, message: Message):
         if not playlist:
             pl = f"{emoji.NO_ENTRY} Empty playlist"
         else:   
-            pl = f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
-                f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
-                for i, x in enumerate(playlist)
+            if len(playlist)>=25:
+                tplaylist=playlist[:25]
+                pl=f"Listing first 25 songs of total {len(playlist)} songs.\n"
+                pl += f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
+                    f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
+                    for i, x in enumerate(tplaylist)
+                    ])
+            else:
+                pl = f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
+                    f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}\n"
+                    for i, x in enumerate(playlist)
                 ])
         if EDIT_TITLE:
             await mp.edit_title()
         if message.chat.type == "private":
-            await message.reply_text(pl)        
+            await message.reply_text(pl, disable_web_page_preview=True)        
         elif LOG_GROUP:
             await mp.send_playlist()
         elif not LOG_GROUP and message.chat.type == "supergroup":
-            k=await message.reply_text(pl)
+            k=await message.reply_text(pl, disable_web_page_preview=True)
             await mp.delete(k)
         for track in playlist[:2]:
             await mp.download_audio(track)
@@ -256,18 +259,26 @@ async def yplay(_, message: Message):
         if not playlist:
             pl = f"{emoji.NO_ENTRY} Empty playlist"
         else:
-            pl = f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
-                f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
-                for i, x in enumerate(playlist)
+            if len(playlist)>=25:
+                tplaylist=playlist[:25]
+                pl=f"Listing first 25 songs of total {len(playlist)} songs.\n"
+                pl += f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
+                    f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
+                    for i, x in enumerate(tplaylist)
+                    ])
+            else:
+                pl = f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
+                    f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}\n"
+                    for i, x in enumerate(playlist)
                 ])
         if EDIT_TITLE:
             await mp.edit_title()
         if message.chat.type == "private":
-            await message.reply_text(pl)
+            await message.reply_text(pl, disable_web_page_preview=True)
         if LOG_GROUP:
             await mp.send_playlist()
         elif not LOG_GROUP and message.chat.type == "supergroup":
-            k=await message.reply_text(pl)
+            k=await message.reply_text(pl, disable_web_page_preview=True)
             await mp.delete(k)
         for track in playlist[:2]:
             await mp.download_audio(track)
@@ -275,7 +286,7 @@ async def yplay(_, message: Message):
             
         
    
-@Client.on_message(filters.command(["dplay", f"dplay@{U}"]) & (filters.chat(CHAT) | filters.private))
+@Client.on_message(filters.command(["splay", f"splay@{U}"]) & (filters.chat(CHAT) | filters.private))
 async def deezer(_, message):
     if ADMIN_ONLY == "Y":
         admins = await mp.get_admins(CHAT)
@@ -289,29 +300,29 @@ async def deezer(_, message):
         text = message.text.split(" ", 1)
         query = text[1]
     else:
-        k=await message.reply_text("You Didn't gave me anything to play use /dplay <song name>")
+        k=await message.reply_text("You Didn't gave me anything to play use /splay <song name>")
         await mp.delete(k)
         await mp.delete(message)
         return
     user=f"[{message.from_user.first_name}](tg://user?id={message.from_user.id})"
     group_call = mp.group_call
-    msg = await message.reply("⚡️ **Fetching Song From Deezer...**")
+    msg = await message.reply("⚡️ **Fetching Song From JioSaavn...**")
     try:
-        songs = await arq.deezer(query,1)
-        if not songs.ok:
-            k=await msg.edit(songs.result)
-            await mp.delete(k)
-            await mp.delete(message)
-            return
-        url = songs.result[0].url
-        title = songs.result[0].title
-
+        p = f"https://jiosaavn-api.vercel.app/search?query={query}"
+        n = requests.get(p)
+        a = json.loads(n.text)
+        y = a[0].get("id")
+        np = f"https://jiosaavn-api.vercel.app/song?id={y}"
+        n = requests.get(np)
+        a = json.loads(n.text)
+        url = a.get("media_url")
+        title = a.get("song")
     except:
         k=await msg.edit("No results found")
         await mp.delete(k)
         await mp.delete(message)
         return
-    data={1:title, 2:url, 3:"deezer", 4:user}
+    data={1:title, 2:url, 3:"saavn", 4:user}
     playlist.append(data)
     group_call = mp.group_call
     client = group_call.client
@@ -350,18 +361,26 @@ async def deezer(_, message):
     if not playlist:
         pl = f"{emoji.NO_ENTRY} Empty playlist"
     else:
-        pl = f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
-            f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
-            for i, x in enumerate(playlist)
+        if len(playlist)>=25:
+            tplaylist=playlist[:25]
+            pl=f"Listing first 25 songs of total {len(playlist)} songs.\n"
+            pl += f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
+                f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
+                for i, x in enumerate(tplaylist)
+                ])
+        else:
+            pl = f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
+                f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}\n"
+                for i, x in enumerate(playlist)
             ])
     if message.chat.type == "private":
-        await message.reply_text(pl)
+        await message.reply_text(pl, disable_web_page_preview=True)
     if EDIT_TITLE:
             await mp.edit_title()
     if LOG_GROUP:
         await mp.send_playlist()
     elif not LOG_GROUP and message.chat.type == "supergroup":
-        k=await message.reply_text(pl)
+        k=await message.reply_text(pl, disable_web_page_preview=True)
         await mp.delete(k)
     for track in playlist[:2]:
         await mp.download_audio(track)
@@ -377,14 +396,23 @@ async def player(_, m: Message):
         await mp.delete(m)
         return
     else:
-        pl = f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
-            f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
-            for i, x in enumerate(playlist)
+        if len(playlist)>=25:
+            tplaylist=playlist[:25]
+            pl=f"Listing first 25 songs of total {len(playlist)} songs.\n"
+            pl += f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
+                f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
+                for i, x in enumerate(tplaylist)
+                ])
+        else:
+            pl = f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
+                f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}\n"
+                for i, x in enumerate(playlist)
             ])
     if m.chat.type == "private":
         await m.reply_text(
             pl,
             parse_mode="Markdown",
+            disable_web_page_preview=True,
             reply_markup=InlineKeyboardMarkup(
                 [
                     [
@@ -402,6 +430,7 @@ async def player(_, m: Message):
             await msg['playlist'].delete()
         msg['playlist'] = await m.reply_text(
             pl,
+            disable_web_page_preview=True,
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup(
                 [
@@ -430,18 +459,26 @@ async def skip_track(_, m: Message):
         if not playlist:
             pl = f"{emoji.NO_ENTRY} Empty playlist"
         else:
-            pl = f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
-            f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
-            for i, x in enumerate(playlist)
-            ])
+            if len(playlist)>=25:
+                tplaylist=playlist[:25]
+                pl=f"Listing first 25 songs of total {len(playlist)} songs.\n"
+                pl += f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
+                    f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
+                    for i, x in enumerate(tplaylist)
+                    ])
+            else:
+                pl = f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
+                    f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}\n"
+                    for i, x in enumerate(playlist)
+                ])
         if m.chat.type == "private":
-            await m.reply_text(pl)
+            await m.reply_text(pl, disable_web_page_preview=True)
         if EDIT_TITLE:
             await mp.edit_title()
         if LOG_GROUP:
             await mp.send_playlist()
         elif not LOG_GROUP and m.chat.type == "supergroup":
-            k=await m.reply_text(pl)
+            k=await m.reply_text(pl, disable_web_page_preview=True)
             await mp.delete(k)
     else:
         try:
@@ -461,18 +498,26 @@ async def skip_track(_, m: Message):
             if not playlist:
                 pl = f"{emoji.NO_ENTRY} Empty Playlist"
             else:
-                pl = f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
-                    f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
-                    for i, x in enumerate(playlist)
+                if len(playlist)>=25:
+                    tplaylist=playlist[:25]
+                    pl=f"Listing first 25 songs of total {len(playlist)} songs.\n"
+                    pl += f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
+                        f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
+                        for i, x in enumerate(tplaylist)
+                        ])
+                else:
+                    pl = f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
+                        f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}\n"
+                        for i, x in enumerate(playlist)
                     ])
             if m.chat.type == "private":
-                await m.reply_text(pl)
+                await m.reply_text(pl, disable_web_page_preview=True)
             if EDIT_TITLE:
                 await mp.edit_title()
             if LOG_GROUP:
                 await mp.send_playlist()
             elif not LOG_GROUP and m.chat.type == "supergroup":
-                k=await m.reply_text(pl)
+                k=await m.reply_text(pl, disable_web_page_preview=True)
                 await mp.delete(k)
         except (ValueError, TypeError):
             k=await m.reply_text(f"{emoji.NO_ENTRY} Invalid input",
@@ -568,6 +613,7 @@ async def restart_playing(_, m: Message):
     )
     await mp.delete(k)
     await mp.delete(m)
+
 
 
 @Client.on_message(filters.command(["pause", f"pause@{U}"]) & admin_filter & (filters.chat(CHAT) | filters.private))
@@ -671,26 +717,92 @@ async def show_playlist(_, m: Message):
         await mp.delete(m)
         return
     else:
-        pl = f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
-            f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
-            for i, x in enumerate(playlist)
+        if len(playlist)>=25:
+            tplaylist=playlist[:25]
+            pl=f"Listing first 25 songs of total {len(playlist)} songs.\n"
+            pl += f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
+                f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
+                for i, x in enumerate(tplaylist)
+                ])
+        else:
+            pl = f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
+                f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}\n"
+                for i, x in enumerate(playlist)
             ])
     if m.chat.type == "private":
-        await m.reply_text(pl)
+        await m.reply_text(pl, disable_web_page_preview=True)
     else:
         if msg.get('playlist') is not None:
             await msg['playlist'].delete()
-        msg['playlist'] = await m.reply_text(pl)
+        msg['playlist'] = await m.reply_text(pl, disable_web_page_preview=True)
     await mp.delete(m)
 
-admincmds=["join", "unmute", "mute", "leave", "clean", "vc", "pause", "resume", "stop", "skip", "radio", "stopradio", "replay", "restart", "volume", f"volume@{U}", f"join@{U}", f"unmute@{U}", f"mute@{U}", f"leave@{U}", f"clean@{U}", f"vc@{U}", f"pause@{U}", f"resume@{U}", f"stop@{U}", f"skip@{U}", f"radio@{U}", f"stopradio@{U}", f"replay@{U}", f"restart@{U}"]
+
+@Client.on_message(filters.command(["shuffle", f"shuffle@{U}"]) & admin_filter & (filters.chat(CHAT) | filters.private))
+async def shuffle_play_list(client, m: Message):
+    group_call = mp.group_call
+    if not playlist:
+        k=await m.reply_text(f"{emoji.NO_ENTRY} No Playlist found, Maybe Radio is playing.")
+        await mp.delete(k)
+        await mp.delete(m)
+        return
+    else:
+        if len(playlist) > 2:
+            await mp.shuffle_playlist()
+            k=await m.reply_text(f"Playlist Shuffled.")
+            await mp.delete(k)
+            await mp.delete(m)
+        else:
+            k=await m.reply_text(f"You cant shuffle playlist with less than 3 songs.")
+            await mp.delete(k)
+            await mp.delete(m)
+
+@Client.on_message(filters.command(["clearplaylist", f"clearplaylist@{U}"]) & admin_filter & (filters.chat(CHAT) | filters.private))
+async def clear_play_list(client, m: Message):
+    group_call = mp.group_call
+    if not playlist:
+        k=await m.reply_text(f"{emoji.NO_ENTRY} No Playlist found, Maybe Radio is playing.")
+        await mp.delete(k)
+        await mp.delete(m)
+        return
+    else:
+        group_call.stop_playout()        
+        Config.playlist.clear()
+        if 3 in RADIO:
+            RADIO.remove(3)
+        k=await m.reply_text(f"Playlist Cleared.")
+        await mp.delete(k)
+        await mp.delete(m)
+
+
+@Client.on_message(filters.command(["cplay", f"cplay@{U}"]) & admin_filter & (filters.chat(CHAT) | filters.private))
+async def channel_play_list(client, m: Message):
+    group_call = mp.group_call
+    if not group_call.is_connected:
+        await mp.start_call()
+    if len(m.command) < 2:
+        k=await m.reply_text('You forgot to pass channel id or channel username.\nExample usage: <code>/cplay Myoosik</code> or <code>/cplay -1002525252525</code>.\n\n⚠️ If you are using channel id, make sure both the bot and user account are member of the given channel.')
+        await mp.delete(k)
+        await mp.delete(m)
+        return
+     
+    k=await m.reply_text(f"Starting Playing From <code>{m.command[1]}</code>")
+    group_call.stop_playout()
+    playlist.clear()   
+    await mp.c_play(m.command[1])
+    await mp.delete(k)
+    await mp.delete(m)
+
+
+
+admincmds=["join", "unmute", "mute", "leave", "clean", "vc", "pause", "resume", "stop", "skip", "radio", "stopradio", "replay", "restart", "volume", "shuffle", "clearplaylist", "cplay", f"cplay@{U}", f"clearplaylist@{U}", f"shuffle@{U}", f"volume@{U}", f"join@{U}", f"unmute@{U}", f"mute@{U}", f"leave@{U}", f"clean@{U}", f"vc@{U}", f"pause@{U}", f"resume@{U}", f"stop@{U}", f"skip@{U}", f"radio@{U}", f"stopradio@{U}", f"replay@{U}", f"restart@{U}"]
 
 @Client.on_message(filters.command(admincmds) & ~admin_filter & (filters.chat(CHAT) | filters.private))
 async def notforu(_, m: Message):
     k=await m.reply("Who the hell you are?.")
     await mp.delete(k)
     await mp.delete(m)
-allcmd = ["play", "player", f"play@{U}", f"player@{U}"] + admincmds
+allcmd = ["play", "player", "splay", f"splay@{U}", f"play@{U}", f"player@{U}"] + admincmds
 
 @Client.on_message(filters.command(allcmd) & ~filters.chat(CHAT) & filters.group)
 async def not_chat(_, m: Message):

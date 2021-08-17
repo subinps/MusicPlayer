@@ -1,7 +1,8 @@
 # Telegram Voice Chat Bot with Channel Support.
 
-A Telegram Bot to Play Audio in Voice Chats With Youtube and Deezer support.
-Supports Live streaming from youtube
+A Telegram Bot to Play Audio in Voice Chats With Youtube and Jio Saavn support.
+Supports Playing Music files from a telegram channel.
+Supports Live streaming from youtube.
 
 ```
 Please fork this repository don't import code
@@ -35,16 +36,15 @@ python3 main.py
 5. `CHAT` : ID of Channel/Group where the bot plays Music.
 6. `LOG_GROUP` : Group to send Playlist, if CHAT is a Group
 7. `ADMINS` : ID of users who can use admin commands.
-8. `ARQ_API` : Get it for free from [@ARQRobot](https://telegram.dog/ARQRobot), This is required for /dplay to work.
-9. `STREAM_URL` : Stream URL of radio station or a youtube live video to stream when the bot starts or with /radio command. [Some Streaming Links](https://gist.github.com/subinps/293d0a117fa0b13da41871538f226956)
-10. `MAXIMUM_DURATION` : Maximum duration of song to play.(Optional)
-11. `REPLY_MESSAGE` : A reply to those who message the USER account in PM. Leave it blank if you do not need this feature. 
-12. `ADMIN_ONLY` : Pass `Y` If you want to make /play and /dplay commands only for admins of `CHAT`. By default /play and /dplay is available for all.
+8. `STREAM_URL` : Stream URL of radio station or a youtube live video to stream when the bot starts or with /radio command.You can also use a telegram channel as radio station. Just upload all you music files to a telegram channel and add the bot and user account in that channel and use chat_id of channel in STREAM_URL.You can also use any public telegram channels, in that case use the username of such channel in place of STREAM_URL (Bot being admin in public channel not required.)  [Some Streaming Links](https://gist.github.com/subinps/293d0a117fa0b13da41871538f226956)
+9. `MAXIMUM_DURATION` : Maximum duration of song to play.(Optional)
+10. `REPLY_MESSAGE` : A reply to those who message the USER account in PM. Leave it blank if you do not need this feature. 
+11. `ADMIN_ONLY` : Pass `Y` If you want to make /play and /splay commands only for admins of `CHAT`. By default /play and /splay is available for all.
 
 - Enable the worker after deploy the project to Heroku
 - Bot will starts radio automatically in given `CHAT` with given `STREAM_URL` after deploy.(24*7 Music even if heroku restarts, radio stream restarts automatically.)  
 - To play a song use /play as a reply to audio file or a youtube link.
-- Use /play <song name> to play song from youtube and /dplay <song name> to play from Deezer.
+- Use /play <song name> to play song from youtube and /splay <song name> to play from JioSaavn or /cplay <channel username or channel id> to play music from a telegram channel.
 - Use /help to know about other commands.
 
 **Features**
@@ -52,8 +52,9 @@ python3 main.py
 - Playlist, queue.
 - Change VoiceChat title to current playing song name.
 - Supports Live streaming from youtube
-- Supports both deezer and youtube to search songs.
+- Supports both Jio Saavn and youtube to search songs.
 - Play from telegram file supported.
+- Play whole music files from a telegram channel.
 - Starts Radio after if no songs in playlist.
 - Automatically downloads audio for the first two tracks in the playlist to ensure smooth playing
 - Automatic restart even if heroku restarts.
@@ -71,4 +72,5 @@ Connect Me On [Telegram](https://telegram.dog/subinps_bot)
 
 ## Credits 
 - [Dash Eclipse's](https://github.com/dashezup) for his [tgvc-userbot](https://github.com/callsmusic/tgvc-userbot).
+- [Thuhin](https://github.com/cachecleanerjeet) for his [Jio Saavn API](https://github.com/cachecleanerjeet/JiosaavnAPI).
 

@@ -35,12 +35,12 @@ Start a VoiceChat.
 
 Use /play <song name> or use /play as a reply to an audio file or youtube link.
 
-You can also use /dplay <song name> to play a song from Deezer.</b>
+You can also use /splay <song name> to play a song from Jio Saavn or /cplay <channel username or channel id> to play music from a telegram channel.</b>
 
 **Common Commands**:
 
 **/play**  Reply to an audio file or YouTube link to play it or use /play <song name>.
-**/dplay** Play music from Deezer, Use /dplay <song name>
+**/splay** Play music from Jio Saavn, Use /splay <song name>
 **/player**  Show current playing song.
 **/help** Show help for commands
 **/playlist** Shows the playlist.
@@ -49,10 +49,13 @@ You can also use /dplay <song name> to play a song from Deezer.</b>
 **/skip** [n] ...  Skip current or n where n >= 2
 **/join**  Join voice chat.
 **/leave**  Leave current voice chat
+**/shuffle** Shuffle Playlist.
+**/cplay** Play music from a channel's music files.
 **/vc**  Check which VC is joined.
 **/stop**  Stop playing.
 **/radio** Start Radio.
 **/stopradio** Stops Radio Stream.
+**/clearplaylist** Clear the playlist.
 **/replay**  Play from the beginning.
 **/clean** Remove unused RAW PCM files.
 **/pause** Pause playing.
@@ -60,8 +63,9 @@ You can also use /dplay <song name> to play a song from Deezer.</b>
 **/volume** Change volume(0-200).
 **/mute**  Mute in VC.
 **/unmute**  Unmute in VC.
-**/restart** Update and restarts the Bot.
+**/restart**  Update and restarts the Bot.
 """
+
 
 
 

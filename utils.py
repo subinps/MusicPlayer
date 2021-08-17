@@ -33,6 +33,7 @@ from youtube_dl import YoutubeDL
 from os import path
 import subprocess
 import asyncio
+import random
 from signal import SIGINT
 from pyrogram.raw.types import InputGroupCall
 from pyrogram.raw.functions.phone import EditGroupCallTitle, CreateGroupCall
@@ -50,7 +51,6 @@ USERNAME=e.username
 
 from user import USER
 
-STREAM_URL=Config.STREAM_URL
 CHAT=Config.CHAT
 FFMPEG_PROCESSES = {}
 ADMIN_LIST={}
@@ -62,6 +62,8 @@ DURATION_LIMIT=Config.DURATION_LIMIT
 DELAY=Config.DELAY
 playlist=Config.playlist
 msg=Config.msg
+SHUFFLE=Config.SHUFFLE
+LIMIT=Config.LIMIT
 
 ydl_opts = {
     "format": "bestaudio[ext=m4a]",
@@ -75,6 +77,8 @@ RADIO_TITLE=os.environ.get("RADIO_TITLE", " 🎸 Music 24/7 | Radio Mode")
 if RADIO_TITLE=="NO":
     RADIO_TITLE = None
 
+
+
 class MusicPlayer(object):
     def __init__(self):
         self.group_call = GroupCallFactory(USER, GroupCallFactory.MTPROTO_CLIENT_TYPE.PYROGRAM).get_file_group_call()
@@ -83,11 +87,19 @@ class MusicPlayer(object):
     async def send_playlist(self):
         if not playlist:
             pl = f"{emoji.NO_ENTRY} Empty playlist"
-        else:       
-            pl = f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
-                f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}\n"
-                for i, x in enumerate(playlist)
-            ])
+        else:
+            if len(playlist)>=25:
+                tplaylist=playlist[:25]
+                pl=f"Listing first 25 songs of total {len(playlist)} songs.\n"
+                pl += f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
+                    f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
+                    for i, x in enumerate(tplaylist)
+                    ])
+            else:
+                pl = f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
+                    f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}\n"
+                    for i, x in enumerate(playlist)
+                ])
         if msg.get('playlist') is not None:
             await msg['playlist'].delete()
         msg['playlist'] = await self.send_text(pl)
@@ -183,8 +195,7 @@ class MusicPlayer(object):
                 print(e)
                 pass
             FFMPEG_PROCESSES[CHAT] = ""
-        station_stream_url = STREAM_URL
-        
+        station_stream_url = Config.STREAM_URL     
         try:
             RADIO.remove(0)
         except:
@@ -193,16 +204,23 @@ class MusicPlayer(object):
             RADIO.add(1)
         except:
             pass
+        
+        if Config.CPLAY:
+            await self.c_play(Config.STREAM_URL)
+            return 
+        try:
+            RADIO.remove(3)
+        except:
+            pass
         if os.path.exists(f'radio-{CHAT}.raw'):
             os.remove(f'radio-{CHAT}.raw')
         # credits: https://t.me/c/1480232458/6825
-        os.mkfifo(f'radio-{CHAT}.raw')
-        group_call.input_filename = f'radio-{CHAT}.raw'
+        #os.mkfifo(f'radio-{CHAT}.raw')
         if not CALL_STATUS.get(CHAT):
             await self.start_call()
         ffmpeg_log = open("ffmpeg.log", "w+")
         command=["ffmpeg", "-y", "-i", station_stream_url, "-f", "s16le", "-ac", "2",
-        "-ar", "48000", "-acodec", "pcm_s16le", group_call.input_filename]
+        "-ar", "48000", "-acodec", "pcm_s16le", f"radio-{CHAT}.raw"]
 
 
         process = await asyncio.create_subprocess_exec(
@@ -216,14 +234,17 @@ class MusicPlayer(object):
         if RADIO_TITLE:
             await self.edit_title()
         await sleep(2)
+        while not os.path.isfile(f'radio-{CHAT}.raw'):
+            await sleep(1)
+        group_call.input_filename = f'radio-{CHAT}.raw'
         while True:
-            await sleep(10)
             if CALL_STATUS.get(CHAT):
                 print("Succesfully Joined")
                 break
             else:
                 print("Connecting...")
                 await self.start_call()
+                await sleep(1)
                 continue
 
     
@@ -278,7 +299,7 @@ class MusicPlayer(object):
         try:
             await self.group_call.client.send(edit)
         except Exception as e:
-            print(e)
+            print("Errors Occured while diting title", e)
             pass
     
 
@@ -305,7 +326,67 @@ class MusicPlayer(object):
             ADMIN_LIST[chat]=admins
 
         return admins
-        
+
+    async def shuffle_playlist(self):
+        v = []
+        p = [v.append(playlist[c]) for c in range(2,len(playlist))]
+        random.shuffle(v)
+        for c in range(2,len(playlist)):
+            playlist.remove(playlist[c]) 
+            playlist.insert(c,v[c-2])
+
+    async def c_play(self, channel):
+        if 1 in RADIO:
+            await self.stop_radio()      
+        if channel.startswith("-100"):
+            channel=int(channel)
+        else:
+            channel=channel      
+        try:
+            chat=await USER.get_chat(channel)
+            print("Starting Playlist from", chat.title)
+            async for m in USER.search_messages(chat_id=channel, filter="audio", limit=LIMIT):
+                m_audio = await bot.get_messages(channel, m.message_id)
+                if round(m_audio.audio.duration / 60) > DURATION_LIMIT:
+                    print(f"Skiped {m_audio.audio.file_name} since duration is greater than maximum duration.")
+                else:
+                    data={1:m_audio.audio.title, 2:m_audio.audio.file_id, 3:"telegram", 4:f"[{chat.title}]({m_audio.link})"}
+                    playlist.append(data)
+                    if len(playlist) == 1:
+                        print("Downloading..")
+                        await self.download_audio(playlist[0])
+                        if not self.group_call.is_connected:
+                            await self.start_call()
+                        file=playlist[0][1]
+                        client = self.group_call.client
+                        self.group_call.input_filename = os.path.join(
+                            client.workdir,
+                            DEFAULT_DOWNLOAD_DIR,
+                            f"{file}.raw"
+                        )
+                        print(f"- START PLAYING: {playlist[0][1]}")                   
+                        if EDIT_TITLE:
+                            await self.edit_title()
+                    for track in playlist[:2]:
+                        await self.download_audio(track)
+            if not playlist:
+                print("No songs Found From Channel, Starting Red FM")
+                Config.CPLAY=False
+                Config.STREAM_URL="https://bcovlive-a.akamaihd.net/19b535b7499a4719a5c19e043063f5d9/ap-southeast-1/6034685947001/playlist.m3u8?nocache=825347"
+                await self.start_radio()
+                return
+            else:
+                if len(playlist) > 2 and SHUFFLE:
+                    await self.shuffle_playlist()
+                RADIO.add(3)
+                if LOG_GROUP:
+                    await self.send_playlist()          
+        except Exception as e:
+            Config.CPLAY=False
+            Config.STREAM_URL="https://bcovlive-a.akamaihd.net/19b535b7499a4719a5c19e043063f5d9/ap-southeast-1/6034685947001/playlist.m3u8?nocache=825347"
+            await self.start_radio()
+            print("Errorrs Occured\n Starting Red FM", e)
+
 
 mp = MusicPlayer()
 

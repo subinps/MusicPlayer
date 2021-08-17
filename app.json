@@ -27,10 +27,6 @@
       "description": "Bot token of Bot, get from @Botfather",
       "required": true
     },
-    "ARQ_API": {
-      "description": "get it for free from @ARQRobot",
-      "required": false
-    },
     "SESSION_STRING": {
       "description": "Session string, read the README to learn how to export it with Pyrogram",
       "required": true

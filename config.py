@@ -29,16 +29,22 @@ ydl_opts = {
 ydl = YoutubeDL(ydl_opts)
 links=[]
 finalurl=""
-STREAM=os.environ.get("STREAM_URL", "https://eu10.fastcast4u.com/clubfmuae")
+C_PLAY=False
+STREAM=os.environ.get("STREAM_URL", "https://bcovlive-a.akamaihd.net/19b535b7499a4719a5c19e043063f5d9/ap-southeast-1/6034685947001/playlist.m3u8?nocache=825347")
 regex = r"^(https?\:\/\/)?(www\.youtube\.com|youtu\.?be)\/.+"
 match = re.match(regex,STREAM)
+regex_ = r"http.*"
+match_ = re.match(regex_,STREAM)
 if match:
     meta = ydl.extract_info(STREAM, download=False)
     formats = meta.get('formats', [meta])
     for f in formats:
         links.append(f['url'])
     finalurl=links[0]
+elif match_:
+    finalurl=STREAM 
 else:
+    C_PLAY=True
     finalurl=STREAM
 
 class Config:
@@ -52,8 +58,10 @@ class Config:
     else:
         LOG_GROUP=None
     STREAM_URL=finalurl
+    CPLAY=C_PLAY
+    SHUFFLE=bool(os.environ.get("SHUFFLE", True))
+    LIMIT=int(os.environ.get("LIMIT", 350))
     ADMIN_ONLY=os.environ.get("ADMIN_ONLY", "N")
-    ARQ_API=os.environ.get("ARQ_API", "")
     REPLY_MESSAGE=os.environ.get("REPLY_MESSAGE", None)
     if REPLY_MESSAGE:
         REPLY_MESSAGE=REPLY_MESSAGE
