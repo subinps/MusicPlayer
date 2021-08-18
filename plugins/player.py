@@ -19,19 +19,21 @@
 #LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
+import asyncio
 import os
 from youtube_dl import YoutubeDL
 from config import Config
 from pyrogram import Client, filters, emoji
 from pyrogram.methods.messages.download_media import DEFAULT_DOWNLOAD_DIR
 from pyrogram.types import Message
-from utils import mp, RADIO, USERNAME, FFMPEG_PROCESSES, playlist
+from utils import mp, RADIO, USERNAME, FFMPEG_PROCESSES, playlist, GET_FILE
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from youtube_search import YoutubeSearch
 from pyrogram import Client
 import subprocess
 from signal import SIGINT
 import re
+from datetime import datetime
 import requests
 import json
 U=USERNAME
@@ -43,7 +45,7 @@ msg = Config.msg
 ADMINS=Config.ADMINS
 CHAT=Config.CHAT
 LOG_GROUP=Config.LOG_GROUP
-
+GET_THUMB={}
 async def is_admin(_, client, message: Message):
     admins = await mp.get_admins(CHAT)
     if message.from_user is None and message.sender_chat:
@@ -113,7 +115,9 @@ async def yplay(_, message: Message):
             await mp.delete(d)
             await mp.delete(message)
             return
-        data={1:m_audio.audio.title, 2:m_audio.audio.file_id, 3:"telegram", 4:user}
+        now = datetime.now()
+        nyav = now.strftime("%d-%m-%Y-%H:%M:%S")
+        data={1:m_audio.audio.title, 2:m_audio.audio.file_id, 3:"telegram", 4:user, 5:f"{nyav}_{message.from_user.id}"}
         playlist.append(data)
         if len(playlist) == 1:
             m_status = await message.reply_text(
@@ -137,7 +141,7 @@ async def yplay(_, message: Message):
                     FFMPEG_PROCESSES[CHAT] = ""
             if not group_call.is_connected:
                 await mp.start_call()
-            file=playlist[0][1]
+            file=playlist[0][5]
             group_call.input_filename = os.path.join(
                 _.workdir,
                 DEFAULT_DOWNLOAD_DIR,
@@ -212,14 +216,21 @@ async def yplay(_, message: Message):
             await mp.delete(k)
             return
         duration = round(info["duration"] / 60)
-        title= info["title"]
+        title = info["title"]
+        try:
+            thumb = info["thumbnail"]
+        except:
+            thumb="https://telegra.ph/file/181242eab5c4a74916d01.jpg"
+            pass
         if int(duration) > DURATION_LIMIT:
             k=await message.reply_text(f"❌ Videos longer than {DURATION_LIMIT} minute(s) aren't allowed, the provided video is {duration} minute(s)")
             await mp.delete(k)
             await mp.delete(message)
             return
-
-        data={1:title, 2:url, 3:"youtube", 4:user}
+        now = datetime.now()
+        nyav = now.strftime("%d-%m-%Y-%H:%M:%S")
+        data={1:title, 2:url, 3:"youtube", 4:user, 5:f"{nyav}_{message.from_user.id}"}
+        GET_THUMB[url]=thumb
         playlist.append(data)
         group_call = mp.group_call
         client = group_call.client
@@ -245,7 +256,7 @@ async def yplay(_, message: Message):
                     FFMPEG_PROCESSES[CHAT] = ""
             if not group_call.is_connected:
                 await mp.start_call()
-            file=playlist[0][1]
+            file=playlist[0][5]
             group_call.input_filename = os.path.join(
                 client.workdir,
                 DEFAULT_DOWNLOAD_DIR,
@@ -317,12 +328,20 @@ async def deezer(_, message):
         a = json.loads(n.text)
         url = a.get("media_url")
         title = a.get("song")
+        try:
+            thumb=a.get("image")
+        except:
+            thumb="https://telegra.ph/file/181242eab5c4a74916d01.jpg"
+            pass
+        GET_THUMB[url] = thumb
     except:
         k=await msg.edit("No results found")
         await mp.delete(k)
         await mp.delete(message)
         return
-    data={1:title, 2:url, 3:"saavn", 4:user}
+    now = datetime.now()
+    nyav = now.strftime("%d-%m-%Y-%H:%M:%S")
+    data={1:title, 2:url, 3:"saavn", 4:user, 5:f"{nyav}_{message.from_user.id}"}
     playlist.append(data)
     group_call = mp.group_call
     client = group_call.client
@@ -348,7 +367,7 @@ async def deezer(_, message):
                 FFMPEG_PROCESSES[CHAT] = ""
         if not group_call.is_connected:
             await mp.start_call()
-        file=playlist[0][1]
+        file=playlist[0][5]
         group_call.input_filename = os.path.join(
             client.workdir,
             DEFAULT_DOWNLOAD_DIR,
@@ -767,7 +786,7 @@ async def clear_play_list(client, m: Message):
         return
     else:
         group_call.stop_playout()        
-        Config.playlist.clear()
+        playlist.clear()
         if 3 in RADIO:
             RADIO.remove(3)
         k=await m.reply_text(f"Playlist Cleared.")
@@ -794,6 +813,42 @@ async def channel_play_list(client, m: Message):
     await mp.delete(m)
 
 
+@Client.on_message(filters.command(['upload', f'upload@{U}']) & (filters.chat(CHAT) | filters.private))
+async def upload(client, message):
+    if not playlist:
+        k=await message.reply_text(f"{emoji.NO_ENTRY} No songs are playing")
+        await mp.delete(k)
+        await mp.delete(message)
+        return
+    url=playlist[0][2]
+    if playlist[0][3] == "telegram":
+        await client.send_audio(chat_id=message.chat.id, audio=url, caption="Uploaded Using [MusicPlayer](https://github.com/subinps/MusicPlayer)")
+    elif playlist[0][3] == "youtube":
+        file=GET_FILE[url]
+        thumb=GET_THUMB[url]
+        response = requests.get(thumb, allow_redirects=True)
+        open(f"{playlist[0][5]}.jpeg", 'wb').write(response.content)
+        await message.reply_chat_action("upload_document")
+        m=await message.reply_text(f"Starting Uploading {playlist[0][1]}...")
+        await client.send_audio(chat_id=message.chat.id, audio=file, file_name=playlist[0][1], thumb=f"{playlist[0][5]}.jpeg", title=playlist[0][1], caption=f"<b>Song: [{playlist[0][1]}]({playlist[0][2]})\nUploaded Using [MusicPlayer](https://github.com/subinps/MusicPlayer)</b>")
+        await m.delete()
+    else:
+        file=GET_FILE[url]
+        thumb=GET_THUMB[url]
+        response = requests.get(thumb, allow_redirects=True)
+        open(f"{playlist[0][5]}.jpeg", 'wb').write(response.content)
+        await message.reply_chat_action("upload_document")
+        cmd=f"cp {file} {playlist[0][5]}.mp3"
+        os.system(cmd)
+        await asyncio.sleep(2)
+        m=await message.reply_text(f"Starting Uploading {playlist[0][1]}...")
+        await client.send_audio(chat_id=message.chat.id, audio=f"{playlist[0][5]}.mp3", file_name=f"{playlist[0][1]}", thumb=f"{playlist[0][5]}.jpeg", title=playlist[0][1], caption=f"<b>Song: [{playlist[0][1]}]({playlist[0][2]})\nUploaded Using [MusicPlayer](https://github.com/subinps/MusicPlayer)</b>")
+        await m.delete()
+        try:
+            os.remove(f"{playlist[0][5]}.mp3")
+        except:
+            pass
+ 
 
 admincmds=["join", "unmute", "mute", "leave", "clean", "vc", "pause", "resume", "stop", "skip", "radio", "stopradio", "replay", "restart", "volume", "shuffle", "clearplaylist", "cplay", f"cplay@{U}", f"clearplaylist@{U}", f"shuffle@{U}", f"volume@{U}", f"join@{U}", f"unmute@{U}", f"mute@{U}", f"leave@{U}", f"clean@{U}", f"vc@{U}", f"pause@{U}", f"resume@{U}", f"stop@{U}", f"skip@{U}", f"radio@{U}", f"stopradio@{U}", f"replay@{U}", f"restart@{U}"]
 

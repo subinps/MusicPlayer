@@ -34,6 +34,7 @@ from os import path
 import subprocess
 import asyncio
 import random
+from datetime import datetime
 from signal import SIGINT
 from pyrogram.raw.types import InputGroupCall
 from pyrogram.raw.functions.phone import EditGroupCallTitle, CreateGroupCall
@@ -55,6 +56,7 @@ CHAT=Config.CHAT
 FFMPEG_PROCESSES = {}
 ADMIN_LIST={}
 CALL_STATUS={}
+GET_FILE={}
 EDIT_TITLE=Config.EDIT_TITLE
 RADIO={6}
 LOG_GROUP=Config.LOG_GROUP
@@ -114,7 +116,7 @@ class MusicPlayer(object):
         download_dir = os.path.join(client.workdir, DEFAULT_DOWNLOAD_DIR)
         group_call.input_filename = os.path.join(
             download_dir,
-            f"{playlist[1][1]}.raw"
+            f"{playlist[1][5]}.raw"
         )
         # remove old track from playlist
         old_track = playlist.pop(0)
@@ -125,8 +127,10 @@ class MusicPlayer(object):
             await self.send_playlist()
         os.remove(os.path.join(
             download_dir,
-            f"{old_track[1]}.raw")
+            f"{old_track[5]}.raw")
         )
+        oldfile=GET_FILE.get(old_track[2])
+        os.remove(oldfile)
         if len(playlist) == 1:
             return
         await self.download_audio(playlist[1])
@@ -147,7 +151,7 @@ class MusicPlayer(object):
         group_call = self.group_call
         client = group_call.client
         raw_file = os.path.join(client.workdir, DEFAULT_DOWNLOAD_DIR,
-                                f"{song[1]}.raw")
+                                f"{song[5]}.raw")
         #if os.path.exists(raw_file):
             #os.remove(raw_file)
         if not os.path.isfile(raw_file):
@@ -178,7 +182,8 @@ class MusicPlayer(object):
                 ar='48k',
                 loglevel='error'
             ).overwrite_output().run()
-            os.remove(original_file)
+            GET_FILE[song[2]]=original_file
+            #os.remove(original_file)
 
 
     async def start_radio(self):
@@ -350,14 +355,16 @@ class MusicPlayer(object):
                 if round(m_audio.audio.duration / 60) > DURATION_LIMIT:
                     print(f"Skiped {m_audio.audio.file_name} since duration is greater than maximum duration.")
                 else:
-                    data={1:m_audio.audio.title, 2:m_audio.audio.file_id, 3:"telegram", 4:f"[{chat.title}]({m_audio.link})"}
+                    now = datetime.now()
+                    nyav = now.strftime("%d-%m-%Y-%H:%M:%S")
+                    data={1:m_audio.audio.title, 2:m_audio.audio.file_id, 3:"telegram", 4:f"[{chat.title}]({m_audio.link})", 5:f"{nyav}_{m.message_id}"}
                     playlist.append(data)
                     if len(playlist) == 1:
                         print("Downloading..")
                         await self.download_audio(playlist[0])
                         if not self.group_call.is_connected:
                             await self.start_call()
-                        file=playlist[0][1]
+                        file=playlist[0][5]
                         client = self.group_call.client
                         self.group_call.input_filename = os.path.join(
                             client.workdir,
