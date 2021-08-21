@@ -20,6 +20,15 @@
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
 import os
+import subprocess
+import sys
+#for updater temp fix 🤒
+try:
+    from pytgcalls.exceptions import GroupCallNotFoundError
+except ModuleNotFoundError:
+    file=os.path.abspath("requirements.txt")
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-r', file, '--upgrade'])
+    os.execl(sys.executable, sys.executable, *sys.argv)
 from config import Config
 import ffmpeg
 from pyrogram import emoji
@@ -31,22 +40,13 @@ from pyrogram import Client
 from pyrogram.utils import MAX_CHANNEL_ID
 from youtube_dl import YoutubeDL
 from os import path
-import subprocess
 import asyncio
 import random
-import sys
 from datetime import datetime
 from signal import SIGINT
 from pyrogram.raw.types import InputGroupCall
 from pyrogram.raw.functions.phone import EditGroupCallTitle, CreateGroupCall
 from random import randint
-#for updater temp fix 🤒
-try:
-    from pytgcalls.exceptions import GroupCallNotFoundError
-except ModuleNotFoundError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", '-U', 'pytgcalls[pyrogram]'])
-finally:
-    from pytgcalls.exceptions import GroupCallNotFoundError
 
 bot = Client(
     "Musicplayervc",
