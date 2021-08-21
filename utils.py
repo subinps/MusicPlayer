@@ -37,6 +37,7 @@ import random
 from datetime import datetime
 from signal import SIGINT
 from pyrogram.raw.types import InputGroupCall
+from pytgcalls.exceptions import GroupCallNotFoundError
 from pyrogram.raw.functions.phone import EditGroupCallTitle, CreateGroupCall
 from random import randint
 
@@ -281,13 +282,18 @@ class MusicPlayer(object):
         group_call = self.group_call
         try:
             await group_call.start(CHAT)
-        except RuntimeError:
-            await USER.send(CreateGroupCall(
-                peer=(await USER.resolve_peer(CHAT)),
-                random_id=randint(10000, 999999999)
-                )
-                )
-            await group_call.start(CHAT)
+        except GroupCallNotFoundError:
+            try:
+
+                await USER.send(CreateGroupCall(
+                    peer=(await USER.resolve_peer(CHAT)),
+                    random_id=randint(10000, 999999999)
+                    )
+                    )
+                await group_call.start(CHAT)
+            except Exception as e:
+                print(e)
+                pass
         except Exception as e:
             print(e)
             pass
@@ -304,7 +310,7 @@ class MusicPlayer(object):
         try:
             await self.group_call.client.send(edit)
         except Exception as e:
-            print("Errors Occured while diting title", e)
+            print("Errors Occured while editing title", e)
             pass
     
 

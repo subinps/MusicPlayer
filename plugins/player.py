@@ -691,7 +691,7 @@ async def mute(_, m: Message):
         await mp.delete(k)
         await mp.delete(m)
         return
-    group_call.set_is_mute(True)
+    await group_call.set_is_mute(True)
     k=await m.reply_text(f"{emoji.MUTED_SPEAKER} Muted")
     await mp.delete(k)
     await mp.delete(m)
@@ -704,7 +704,7 @@ async def unmute(_, m: Message):
         await mp.delete(k)
         await mp.delete(m)
         return
-    group_call.set_is_mute(False)
+    await group_call.set_is_mute(False)
     k=await m.reply_text(f"{emoji.SPEAKER_MEDIUM_VOLUME} Unmuted")
     await mp.delete(k)
     await mp.delete(m)

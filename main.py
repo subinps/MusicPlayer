@@ -27,6 +27,7 @@ from utils import mp, USERNAME, FFMPEG_PROCESSES
 from pyrogram.raw import functions, types
 import os
 import sys
+from time import sleep
 from threading import Thread
 from signal import SIGINT
 import subprocess
@@ -45,7 +46,8 @@ async def main():
         await mp.start_radio()
 def stop_and_restart():
     bot.stop()
-    os.system("git pull")
+    os.system("git pull && pip3 install -U pytgcalls[pyrogram]")
+    sleep(10)
     os.execl(sys.executable, sys.executable, *sys.argv)
 
 
