@@ -34,12 +34,19 @@ from os import path
 import subprocess
 import asyncio
 import random
+import sys
 from datetime import datetime
 from signal import SIGINT
 from pyrogram.raw.types import InputGroupCall
-from pytgcalls.exceptions import GroupCallNotFoundError
 from pyrogram.raw.functions.phone import EditGroupCallTitle, CreateGroupCall
 from random import randint
+#for updater temp fix 🤒
+try:
+    from pytgcalls.exceptions import GroupCallNotFoundError
+except ModuleNotFoundError:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", '-U', 'pytgcalls[pyrogram]'])
+finally:
+    from pytgcalls.exceptions import GroupCallNotFoundError
 
 bot = Client(
     "Musicplayervc",
