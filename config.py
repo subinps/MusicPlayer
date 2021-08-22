@@ -40,7 +40,7 @@ if match:
     formats = meta.get('formats', [meta])
     for f in formats:
         links.append(f['url'])
-    finalurl=links[0]
+    finalurl=links[-1]
 elif match_:
     finalurl=STREAM 
 else:
