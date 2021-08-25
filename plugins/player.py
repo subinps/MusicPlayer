@@ -1258,7 +1258,9 @@ async def upload(client, message):
         await client.send_audio(chat_id=message.chat.id, audio=url, caption=f"<b>Song: {playlist[0][1]}\nUploaded Using [MusicPlayer](https://github.com/subinps/MusicPlayer)</b>")
     elif playlist[0][3] == "youtube":
         file=GET_FILE[url]
-        thumb=GET_THUMB[url]
+        thumb=GET_THUMB.get(url)
+        if thumb is None:
+            thumb="https://telegra.ph/file/181242eab5c4a74916d01.jpg"
         response = requests.get(thumb, allow_redirects=True)
         open(f"{playlist[0][5]}.jpeg", 'wb').write(response.content)
         await message.reply_chat_action("upload_document")
@@ -1267,7 +1269,9 @@ async def upload(client, message):
         await m.delete()
     else:
         file=GET_FILE[url]
-        thumb=GET_THUMB[url]
+        thumb=GET_THUMB.get(url)
+        if thumb is None:
+            thumb="https://telegra.ph/file/181242eab5c4a74916d01.jpg"
         response = requests.get(thumb, allow_redirects=True)
         open(f"{playlist[0][5]}.jpeg", 'wb').write(response.content)
         await message.reply_chat_action("upload_document")
