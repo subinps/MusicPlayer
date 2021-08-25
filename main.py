@@ -19,18 +19,29 @@
 #LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
-import asyncio
-from pyrogram import Client, idle, filters
-import os
-from config import Config
-from utils import mp, USERNAME, FFMPEG_PROCESSES
-from pyrogram.raw import functions, types
-import os
-import sys
-from time import sleep
-from threading import Thread
-from signal import SIGINT
-import subprocess
+try:
+    import asyncio
+    from pyrogram import Client, idle, filters
+    import os
+    from config import Config
+    from utils import mp, USERNAME, FFMPEG_PROCESSES
+    from pyrogram.raw import functions, types
+    import os
+    import sys
+    from time import sleep
+    from threading import Thread
+    from signal import SIGINT
+    import subprocess
+    
+except ModuleNotFoundError:
+    import os
+    import sys
+    import subprocess
+    file=os.path.abspath("requirements.txt")
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-r', file, '--upgrade'])
+    os.execl(sys.executable, sys.executable, *sys.argv)
+
+
 CHAT=Config.CHAT
 bot = Client(
     "Musicplayer",
@@ -46,7 +57,7 @@ async def main():
         await mp.start_radio()
 def stop_and_restart():
     bot.stop()
-    os.system("git pull && pip3 install -U pytgcalls[pyrogram]")
+    os.system("git pull")
     sleep(10)
     os.execl(sys.executable, sys.executable, *sys.argv)
 
@@ -94,7 +105,15 @@ bot.send(
             ),
             types.BotCommand(
                 command="splay",
-                description="Play song from JioSaavn"
+                description="Play song from JioSaavn, use -a flag to play an album."
+            ),
+            types.BotCommand(
+                command="cplay",
+                description="Plays music files from a channel."
+            ),
+            types.BotCommand(
+                command="yplay",
+                description="Plays music files from a youtube playlist."
             ),
             types.BotCommand(
                 command="player",
@@ -105,14 +124,6 @@ bot.send(
                 description="Shows the playlist"
             ),
             types.BotCommand(
-                command="cplay",
-                description="Plays music files from a channel."
-            ),
-            types.BotCommand(
-                command="skip",
-                description="Skip the current song"
-            ),
-            types.BotCommand(
                 command="clearplaylist",
                 description="Clears the current playlist"
             ),
@@ -120,6 +131,22 @@ bot.send(
                 command="shuffle",
                 description="Shuffle the playlist"
             ),
+            types.BotCommand(
+                command="export",
+                description="Export current playlist as json file for future use."
+            ),
+            types.BotCommand(
+                command="import",
+                description="Import a previously exported playlist."
+            ),
+            types.BotCommand(
+                command="upload",
+                description="Upload current playing song as audio file."
+            ),
+            types.BotCommand(
+                command="skip",
+                description="Skip the current song"
+            ),           
             types.BotCommand(
                 command="join",
                 description="Join VC"

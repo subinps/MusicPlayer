@@ -30,7 +30,8 @@ ydl = YoutubeDL(ydl_opts)
 links=[]
 finalurl=""
 C_PLAY=False
-STREAM=os.environ.get("STREAM_URL", "https://bcovlive-a.akamaihd.net/19b535b7499a4719a5c19e043063f5d9/ap-southeast-1/6034685947001/playlist.m3u8?nocache=825347")
+Y_PLAY=False
+STREAM=os.environ.get("STREAM_URL", "https://t.me/DumpPlaylist/30")
 regex = r"^(https?\:\/\/)?(www\.youtube\.com|youtu\.?be)\/.+"
 match = re.match(regex,STREAM)
 regex_ = r"http.*"
@@ -41,6 +42,15 @@ if match:
     for f in formats:
         links.append(f['url'])
     finalurl=links[-1]
+elif STREAM.startswith("https://t.me/DumpPlaylist"):
+    try:
+        msg_id=STREAM.split("/", 4)[4]
+        finalurl=int(msg_id)
+        Y_PLAY=True
+    except:
+        finalurl="https://eu10.fastcast4u.com/clubfmuae"
+        print("Unable to fetch youtube playlist, starting CLUB FM")
+        pass
 elif match_:
     finalurl=STREAM 
 else:
@@ -59,8 +69,10 @@ class Config:
         LOG_GROUP=None
     STREAM_URL=finalurl
     CPLAY=C_PLAY
+    YPLAY=Y_PLAY
     SHUFFLE=bool(os.environ.get("SHUFFLE", True))
-    LIMIT=int(os.environ.get("LIMIT", 350))
+    DELETE_HISTORY=bool(os.environ.get("DELETE_HISTORY", True))
+    LIMIT=int(os.environ.get("LIMIT", 1500))
     ADMIN_ONLY=os.environ.get("ADMIN_ONLY", "N")
     REPLY_MESSAGE=os.environ.get("REPLY_MESSAGE", None)
     if REPLY_MESSAGE:
@@ -73,8 +85,9 @@ class Config:
     DURATION_LIMIT=int(os.environ.get("MAXIMUM_DURATION", 15))
     DELAY = int(os.environ.get("DELAY", 10))
     API_HASH = os.environ.get("API_HASH", "")
-    BOT_TOKEN = os.environ.get("BOT_TOKEN", "") 
+    BOT_TOKEN = os.environ.get("BOT_TOKEN", "")     
     SESSION = os.environ.get("SESSION_STRING", "")
     playlist=[]
     msg = {}
+    CONV = {}
 

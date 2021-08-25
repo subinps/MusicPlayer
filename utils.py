@@ -19,34 +19,39 @@
 #LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 #OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #SOFTWARE.
-import os
-import subprocess
-import sys
-#for updater temp fix 🤒
 try:
+    import os
+    import subprocess
+    import sys
     from pytgcalls.exceptions import GroupCallNotFoundError
+    from config import Config
+    import ffmpeg
+    from pyrogram import emoji
+    from pyrogram.methods.messages.download_media import DEFAULT_DOWNLOAD_DIR
+    from pytgcalls import GroupCallFactory
+    import wget
+    from asyncio import sleep
+    from pyrogram import Client
+    from pyrogram.utils import MAX_CHANNEL_ID
+    from youtube_dl import YoutubeDL
+    from os import path
+    import asyncio
+    import json
+    import random
+    from datetime import datetime
+    from signal import SIGINT
+    from pyrogram.raw.types import InputGroupCall
+    from pyrogram.errors import YouBlockedUser
+    from pyrogram.raw.functions.phone import EditGroupCallTitle, CreateGroupCall
+    from pyrogram.raw.functions.messages import DeleteHistory
+    from random import randint
 except ModuleNotFoundError:
+    import os
+    import sys
+    import subprocess
     file=os.path.abspath("requirements.txt")
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-r', file, '--upgrade'])
     os.execl(sys.executable, sys.executable, *sys.argv)
-from config import Config
-import ffmpeg
-from pyrogram import emoji
-from pyrogram.methods.messages.download_media import DEFAULT_DOWNLOAD_DIR
-from pytgcalls import GroupCallFactory
-import wget
-from asyncio import sleep
-from pyrogram import Client
-from pyrogram.utils import MAX_CHANNEL_ID
-from youtube_dl import YoutubeDL
-from os import path
-import asyncio
-import random
-from datetime import datetime
-from signal import SIGINT
-from pyrogram.raw.types import InputGroupCall
-from pyrogram.raw.functions.phone import EditGroupCallTitle, CreateGroupCall
-from random import randint
 
 bot = Client(
     "Musicplayervc",
@@ -57,14 +62,16 @@ bot = Client(
 bot.start()
 e=bot.get_me()
 USERNAME=e.username
+PROGRESS={}
+GET_MESSAGE={}
 
 from user import USER
-
 CHAT=Config.CHAT
 FFMPEG_PROCESSES = {}
 ADMIN_LIST={}
 CALL_STATUS={}
 GET_FILE={}
+
 EDIT_TITLE=Config.EDIT_TITLE
 RADIO={6}
 LOG_GROUP=Config.LOG_GROUP
@@ -138,7 +145,10 @@ class MusicPlayer(object):
             f"{old_track[5]}.raw")
         )
         oldfile=GET_FILE.get(old_track[2])
-        os.remove(oldfile)
+        try:
+            os.remove(oldfile)
+        except:
+            pass
         if len(playlist) == 1:
             return
         await self.download_audio(playlist[1])
@@ -221,6 +231,9 @@ class MusicPlayer(object):
         if Config.CPLAY:
             await self.c_play(Config.STREAM_URL)
             return 
+        if Config.YPLAY:
+            await self.y_play(Config.STREAM_URL)
+            return
         try:
             RADIO.remove(3)
         except:
@@ -251,13 +264,13 @@ class MusicPlayer(object):
             await sleep(1)
         group_call.input_filename = f'radio-{CHAT}.raw'
         while True:
-            if CALL_STATUS.get(CHAT):
+            if group_call.is_connected:
                 print("Succesfully Joined")
                 break
             else:
                 print("Connecting...")
                 await self.start_call()
-                await sleep(1)
+                await sleep(10)
                 continue
 
     
@@ -390,9 +403,9 @@ class MusicPlayer(object):
                     for track in playlist[:2]:
                         await self.download_audio(track)
             if not playlist:
-                print("No songs Found From Channel, Starting Red FM")
+                print("No songs Found From Channel, Starting Club FM")
                 Config.CPLAY=False
-                Config.STREAM_URL="https://bcovlive-a.akamaihd.net/19b535b7499a4719a5c19e043063f5d9/ap-southeast-1/6034685947001/playlist.m3u8?nocache=825347"
+                Config.STREAM_URL="https://eu10.fastcast4u.com/clubfmuae"
                 await self.start_radio()
                 return
             else:
@@ -403,10 +416,101 @@ class MusicPlayer(object):
                     await self.send_playlist()          
         except Exception as e:
             Config.CPLAY=False
-            Config.STREAM_URL="https://bcovlive-a.akamaihd.net/19b535b7499a4719a5c19e043063f5d9/ap-southeast-1/6034685947001/playlist.m3u8?nocache=825347"
+            Config.STREAM_URL="https://eu10.fastcast4u.com/clubfmuae"
             await self.start_radio()
-            print("Errorrs Occured\n Starting Red FM", e)
+            print("Errorrs Occured\n Starting CluB FM", e)
 
+    async def y_play(self, msg_id):
+        if 1 in RADIO:
+            await self.stop_radio()
+        try:
+            getplaylist=await bot.get_messages("DumpPlaylist", int(msg_id))
+            playlistfile = await getplaylist.download()
+            file=open(playlistfile)
+            f=json.loads(file.read(), object_hook=lambda d: {int(k): v for k, v in d.items()})
+            for play in f:
+                playlist.append(play)
+                if len(playlist) == 1:
+                    print("Downloading..")
+                    await self.download_audio(playlist[0])
+                    if not self.group_call.is_connected:
+                        await self.start_call()
+                    file_=playlist[0][5]
+                    client = self.group_call.client
+                    self.group_call.input_filename = os.path.join(
+                        client.workdir,
+                        DEFAULT_DOWNLOAD_DIR,
+                        f"{file_}.raw"
+                    )
+                    print(f"- START PLAYING: {playlist[0][1]}")
+                    if EDIT_TITLE:
+                        await self.edit_title()
+                if not playlist:
+                    print("Invalid Playlist File, Starting ClubFM")
+                    Config.YPLAY=False
+                    Config.STREAM_URL="https://eu10.fastcast4u.com/clubfmuae"
+                    await self.start_radio()
+                    file.close()
+                    try:
+                        os.remove(playlistfile)
+                    except:
+                        pass
+                    return
+                else:
+                    if len(playlist) > 2 and SHUFFLE:
+                        await self.shuffle_playlist()
+                    RADIO.add(3)
+                    if LOG_GROUP:
+                        await self.send_playlist()                
+                for track in playlist[:2]:
+                    await mp.download_audio(track)        
+            file.close()
+            try:
+                os.remove(playlistfile)
+            except:
+                pass
+        except Exception as e:
+            print("Invalid Playlist File, Starting ClubFM")
+            Config.YPLAY=False
+            Config.STREAM_URL="https://eu10.fastcast4u.com/clubfmuae"
+            await self.start_radio()
+            return
+
+
+    async def get_playlist(self, user, url):
+        group_call = self.group_call
+        if not group_call:
+            await self.start_call()
+        group_call = self.group_call
+        client = group_call.client
+        try:
+            k=await USER.send_message(chat_id="GetPlayListBot", text="/start")
+        except YouBlockedUser:
+            await client.unblock_user("GetPlayListBot")
+            k=await USER.send_message(chat_id="GetPlayListBot", text="/start")
+        except Exception as e:
+            return f"Error: {e}"
+        Config.CONV[k.message_id] = "START"
+        GET_MESSAGE[k.message_id]=f"/ytplaylistvcbot {user} {url}"
+        PROGRESS[int(user)]="Waiting"
+        await sleep(2)
+        MAX=60 #wait for maximum 2 munutes
+        while MAX != 0:
+            if PROGRESS.get(int(user))=="Waiting":
+                await sleep(2)
+                MAX-=1
+                continue
+            else:
+                break
+        if Config.DELETE_HISTORY:
+            try:
+                await USER.send(DeleteHistory(peer=(await USER.resolve_peer("GetPlayListBot")), max_id=0, revoke=True))
+            except:
+                pass
+        if MAX==0:
+            return 'timeout'
+        return PROGRESS.get(int(user))
+                
 
 mp = MusicPlayer()
 

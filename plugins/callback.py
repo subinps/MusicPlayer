@@ -28,33 +28,36 @@ from config import Config
 
 HELP = """
 
-<b>Add the bot and User account in your Group with admin rights.
-
-Start a VoiceChat
-
+<b>
 Use /play <song name> or use /play as a reply to an audio file or youtube link.
 
-You can also use /splay <song name> to play a song from JioSaavn or /cplay <channel username or channel id> to play music from a telegram channel.</b>
+Use /yplay to play all the songs of a youtube playlist.
+
+You can also use <code>/splay song name</code> to play a song from Jio Saavn or <code>/splay -a album name</code> to play all the songs from a jiosaavn album or /cplay <channel username or channel id> to play music from a telegram channel.</b>
 
 **Common Commands**:
 
 **/play**  Reply to an audio file or YouTube link to play it or use /play <song name>.
-**/splay** Play music from Jio Saavn, Use /splay <song name>
+**/splay** Play music from Jio Saavn, Use /splay <song name> or <code>/splay -a album name</code> to play all the songs from that album.
 **/player**  Show current playing song.
+**/upload** Uploads current playing song as audio file.
 **/help** Show help for commands
 **/playlist** Shows the playlist.
 
 **Admin Commands**:
-**/skip** [n] ...  Skip current or n where n >= 2
+**/skip** [n] ...  Skip current or n where n >= 2.
+**/cplay** Play music from a channel's music files.
+**/yplay** Play music from a youtube playlist.
 **/join**  Join voice chat.
 **/leave**  Leave current voice chat
 **/shuffle** Shuffle Playlist.
-**/cplay** Play music from a channel's music files.
 **/vc**  Check which VC is joined.
 **/stop**  Stop playing.
 **/radio** Start Radio.
 **/stopradio** Stops Radio Stream.
 **/clearplaylist** Clear the playlist.
+**/export** Export current playlist for future use.
+**/import** Import a previously exported playlist.
 **/replay**  Play from the beginning.
 **/clean** Remove unused RAW PCM files.
 **/pause** Pause playing.
@@ -62,7 +65,7 @@ You can also use /splay <song name> to play a song from JioSaavn or /cplay <chan
 **/volume** Change volume(0-200).
 **/mute**  Mute in VC.
 **/unmute**  Unmute in VC.
-**/restart** Update and restarts the Bot.
+**/restart**  Update and restarts the Bot.
 """
 
 
@@ -213,10 +216,6 @@ async def cb_handler(client: Client, query: CallbackQuery):
         buttons = [
             [
                 InlineKeyboardButton('⚙️ Update Channel', url='https://t.me/subin_works'),
-                InlineKeyboardButton('🤖 Other Bots', url='https://t.me/subin_works/122'),
-            ],
-            [
-                InlineKeyboardButton('👨🏼‍💻 Developer', url='https://t.me/subinps'),
                 InlineKeyboardButton('🧩 Source', url='https://github.com/subinps/MusicPlayer'),
             ]
             ]

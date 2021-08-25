@@ -21,12 +21,80 @@
 #SOFTWARE.
 
 from pyrogram import Client, filters
-from utils import USERNAME
+from utils import USERNAME, GET_MESSAGE, PROGRESS
 from config import Config
 ADMINS=Config.ADMINS
 CACHE={}
 from pyrogram.errors import BotInlineDisabled
-@Client.on_message(filters.private & ~filters.bot & filters.incoming & ~filters.service & ~filters.me)
+
+async def in_convo(_, client, message):
+    try:
+        k=Config.CONV.get(message.reply_to_message.message_id)
+    except:
+        return False
+    if k and k == "START":
+        return True
+    else:
+        return False
+
+async def in_co_nvo(_, client, message):
+    try:
+        k=Config.CONV.get(message.reply_to_message.message_id)
+    except:
+        return False
+    if k and k == "PLAYLIST":
+        return True
+    else:
+        return False
+async def is_reply(_, client, message):
+    if Config.REPLY_MESSAGE:
+        return True
+    else:
+        return False
+
+start_filter=filters.create(in_convo)   
+playlist_filter=filters.create(in_co_nvo) 
+reply_filter=filters.create(is_reply)
+
+
+@Client.on_message(filters.private & filters.chat(1977947154) & start_filter)
+async def get_start(client, message):
+    m=message.reply_to_message.message_id
+    link=GET_MESSAGE.get(m)
+    k=await client.send_message(chat_id="GetPlayListBot", text=link)
+    del Config.CONV[m]
+    Config.CONV[k.message_id] = "PLAYLIST"
+    command, user, url = link.split(" ", 3)
+    GET_MESSAGE[k.message_id] = user
+
+
+@Client.on_message(filters.private & filters.chat(1977947154) & playlist_filter)
+async def get_starhhhht(client, message):
+    m=message.reply_to_message.message_id
+    user=GET_MESSAGE.get(m)
+    nva=message
+    if nva.text:
+        error=nva.text
+        if "PeerInvalid" in error:
+            PROGRESS[int(user)]="peer"
+        elif "kicked" in error:
+            PROGRESS[int(user)]="kicked"
+        elif "nosub" in error:
+            PROGRESS[int(user)]="nosub"
+        elif "Invalid Url" in error:
+            PROGRESS[int(user)]="urlinvalid"
+        else:
+            PROGRESS[int(user)]=error
+    elif nva.document:
+        ya=await nva.download()
+        PROGRESS[int(user)]=ya
+    else:
+        PROGRESS[int(user)]="Unknown Error"
+    await client.read_history(1977947154)
+    del GET_MESSAGE[m]
+    del Config.CONV[m]
+
+@Client.on_message(reply_filter & filters.private & ~filters.bot & filters.incoming & ~filters.service & ~filters.me)
 async def reply(client, message): 
     try:
         inline = await client.get_inline_bot_results(USERNAME, "ORU_MANDAN_PM_VANNU")

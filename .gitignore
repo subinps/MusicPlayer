@@ -8,3 +8,5 @@ unknown_errors.txt
 .env
 test.py
 test1.py
+*.mp4
+*.m4a

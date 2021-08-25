@@ -50,6 +50,7 @@ python3 main.py
 **Features**
 
 - Playlist, queue.
+- Supports Play from Youtube Playlist.
 - Change VoiceChat title to current playing song name.
 - Supports Live streaming from youtube
 - Supports both Jio Saavn and youtube to search songs.
