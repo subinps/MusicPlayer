@@ -94,7 +94,7 @@ async def get_starhhhht(client, message):
     del GET_MESSAGE[m]
     del Config.CONV[m]
 
-@Client.on_message(reply_filter & filters.private & ~filters.bot & filters.incoming & ~filters.service & ~filters.me)
+@Client.on_message(reply_filter & filters.private & ~filters.bot & filters.incoming & ~filters.service & ~filters.me & ~filters.chat([777000, 454000]))
 async def reply(client, message): 
     try:
         inline = await client.get_inline_bot_results(USERNAME, "ORU_MANDAN_PM_VANNU")
