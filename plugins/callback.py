@@ -21,6 +21,7 @@
 #SOFTWARE.
 
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from pyrogram.errors import MessageNotModified
 from pyrogram import Client, emoji
 from utils import mp, playlist
 from config import Config
@@ -101,20 +102,22 @@ async def cb_handler(client: Client, query: CallbackQuery):
                     f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}\n"
                     for i, x in enumerate(playlist)
                 ])
-        await query.edit_message_text(
-                f"{pl}",
-                parse_mode="Markdown",
-                reply_markup=InlineKeyboardMarkup(
-                    [
+        try:
+            await query.edit_message_text(
+                    f"{pl}",
+                    parse_mode="Markdown",
+                    reply_markup=InlineKeyboardMarkup(
                         [
-                            InlineKeyboardButton("🔄", callback_data="replay"),
-                            InlineKeyboardButton("⏯", callback_data="pause"),
-                            InlineKeyboardButton("⏩", callback_data="skip")
-                            
-                        ],
-                    ]
+                            [
+                                InlineKeyboardButton("🔄", callback_data="replay"),
+                                InlineKeyboardButton("⏯", callback_data="pause"),
+                                InlineKeyboardButton("⏩", callback_data="skip")
+                            ],
+                        ]
+                    )
                 )
-            )
+        except MessageNotModified:
+            pass
 
     elif query.data == "pause":
         if not playlist:
@@ -133,20 +136,22 @@ async def cb_handler(client: Client, query: CallbackQuery):
                     f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}\n"
                     for i, x in enumerate(playlist)
                 ])
-        await query.edit_message_text(f"{emoji.PLAY_OR_PAUSE_BUTTON} Paused\n\n{pl},",
-        disable_web_page_preview=True,
-        reply_markup=InlineKeyboardMarkup(
+
+        try:
+            await query.edit_message_text(f"{emoji.PLAY_OR_PAUSE_BUTTON} Paused\n\n{pl},",
+                disable_web_page_preview=True,
+                reply_markup=InlineKeyboardMarkup(
                     [
                         [
                             InlineKeyboardButton("🔄", callback_data="replay"),
                             InlineKeyboardButton("⏯", callback_data="resume"),
                             InlineKeyboardButton("⏩", callback_data="skip")
-                            
                         ],
                     ]
                 )
             )
-
+        except MessageNotModified:
+            pass
     
     elif query.data == "resume":   
         if not playlist:
@@ -165,19 +170,22 @@ async def cb_handler(client: Client, query: CallbackQuery):
                     f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}\n"
                     for i, x in enumerate(playlist)
                 ])
-        await query.edit_message_text(f"{emoji.PLAY_OR_PAUSE_BUTTON} Resumed\n\n{pl}",
-        disable_web_page_preview=True,
-        reply_markup=InlineKeyboardMarkup(
+
+        try:
+            await query.edit_message_text(f"{emoji.PLAY_OR_PAUSE_BUTTON} Resumed\n\n{pl}",
+                disable_web_page_preview=True,
+                reply_markup=InlineKeyboardMarkup(
                     [
                         [
                             InlineKeyboardButton("🔄", callback_data="replay"),
                             InlineKeyboardButton("⏯", callback_data="pause"),
                             InlineKeyboardButton("⏩", callback_data="skip")
-                            
                         ],
                     ]
                 )
             )
+        except MessageNotModified:
+            pass
 
     elif query.data=="skip":   
         if not playlist:
@@ -190,39 +198,44 @@ async def cb_handler(client: Client, query: CallbackQuery):
                 pl += f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
                     f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}"
                     for i, x in enumerate(tplaylist)
-                    ])
+                ])
             else:
                 pl = f"{emoji.PLAY_BUTTON} **Playlist**:\n" + "\n".join([
                     f"**{i}**. **🎸{x[1]}**\n   👤**Requested by:** {x[4]}\n"
                     for i, x in enumerate(playlist)
                 ])
+
         try:
             await query.edit_message_text(f"{emoji.PLAY_OR_PAUSE_BUTTON} Skipped\n\n{pl}",
-            disable_web_page_preview=True,
-            reply_markup=InlineKeyboardMarkup(
-                [
+                disable_web_page_preview=True,
+                reply_markup=InlineKeyboardMarkup(
                     [
-                        InlineKeyboardButton("🔄", callback_data="replay"),
-                        InlineKeyboardButton("⏯", callback_data="pause"),
-                        InlineKeyboardButton("⏩", callback_data="skip")
-                            
-                    ],
-                ]
+                        [
+                            InlineKeyboardButton("🔄", callback_data="replay"),
+                            InlineKeyboardButton("⏯", callback_data="pause"),
+                            InlineKeyboardButton("⏩", callback_data="skip")
+                        ],
+                    ]
+                )
             )
-        )
-        except:
+        except MessageNotModified:
             pass
+
     elif query.data=="help":
         buttons = [
             [
                 InlineKeyboardButton('⚙️ Update Channel', url='https://t.me/subin_works'),
                 InlineKeyboardButton('🧩 Source', url='https://github.com/subinps/MusicPlayer'),
             ]
-            ]
+        ]
         reply_markup = InlineKeyboardMarkup(buttons)
-        await query.edit_message_text(
-            HELP,
-            reply_markup=reply_markup
 
-        )
+        try:
+            await query.edit_message_text(
+                HELP,
+                reply_markup=reply_markup
+
+            )
+        except MessageNotModified:
+            pass
 
