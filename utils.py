@@ -140,10 +140,13 @@ class MusicPlayer(object):
             await self.edit_title()
         if LOG_GROUP:
             await self.send_playlist()
-        os.remove(os.path.join(
-            download_dir,
-            f"{old_track[5]}.raw")
-        )
+        try:
+            os.remove(os.path.join(
+                download_dir,
+                f"{old_track[5]}.raw")
+                )
+        except:
+            pass
         oldfile=GET_FILE.get(old_track[2])
         try:
             os.remove(oldfile)

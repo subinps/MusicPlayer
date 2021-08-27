@@ -36,7 +36,7 @@ import re
 from datetime import datetime
 import requests
 import json
-
+import ffmpeg
 
 U=USERNAME
 EDIT_TITLE=Config.EDIT_TITLE
@@ -1245,7 +1245,6 @@ async def import_play_list(client, m: Message):
         await mp.delete(k)
 
 
-
 @Client.on_message(filters.command(['upload', f'upload@{U}']) & (filters.chat(CHAT) | filters.private))
 async def upload(client, message):
     if not playlist:
@@ -1264,8 +1263,18 @@ async def upload(client, message):
         response = requests.get(thumb, allow_redirects=True)
         open(f"{playlist[0][5]}.jpeg", 'wb').write(response.content)
         await message.reply_chat_action("upload_document")
+        dur=ffmpeg.probe(file)['format']['duration']
         m=await message.reply_text(f"Starting Uploading {playlist[0][1]}...")
-        await client.send_audio(chat_id=message.chat.id, audio=file, file_name=playlist[0][1], thumb=f"{playlist[0][5]}.jpeg", title=playlist[0][1], caption=f"<b>Song: [{playlist[0][1]}]({playlist[0][2]})\nUploaded Using [MusicPlayer](https://github.com/subinps/MusicPlayer)</b>")
+        await client.send_audio(
+            chat_id=message.chat.id,
+            audio=file,
+            file_name=playlist[0][1],
+            thumb=f"{playlist[0][5]}.jpeg",
+            title=playlist[0][1],
+            duration=int(float(dur)),
+            performer="MusicPlayer",
+            caption=f"<b>Song: [{playlist[0][1]}]({playlist[0][2]})\nUploaded Using [MusicPlayer](https://github.com/subinps/MusicPlayer)</b>"
+            )
         await m.delete()
     else:
         file=GET_FILE[url]
@@ -1279,7 +1288,17 @@ async def upload(client, message):
         os.system(cmd)
         await asyncio.sleep(2)
         m=await message.reply_text(f"Starting Uploading {playlist[0][1]}...")
-        await client.send_audio(chat_id=message.chat.id, audio=f"{playlist[0][5]}.mp3", file_name=f"{playlist[0][1]}", thumb=f"{playlist[0][5]}.jpeg", title=playlist[0][1], caption=f"<b>Song: [{playlist[0][1]}]({playlist[0][2]})\nUploaded Using [MusicPlayer](https://github.com/subinps/MusicPlayer)</b>")
+        dur=ffmpeg.probe(f"{playlist[0][5]}.mp3")['format']['duration']
+        await client.send_audio(
+            chat_id=message.chat.id,
+            audio=f"{playlist[0][5]}.mp3",
+            file_name=f"{playlist[0][1]}",
+            thumb=f"{playlist[0][5]}.jpeg",
+            title=playlist[0][1],
+            duration=int(float(dur)),
+            performer="MusicPlayer",
+            caption=f"<b>Song: [{playlist[0][1]}]({playlist[0][2]})\nUploaded Using [MusicPlayer](https://github.com/subinps/MusicPlayer)</b>"
+            )
         await m.delete()
         try:
             os.remove(f"{playlist[0][5]}.mp3")
