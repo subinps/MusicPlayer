@@ -41,7 +41,7 @@ try:
     from datetime import datetime
     from signal import SIGINT
     from pyrogram.raw.types import InputGroupCall
-    from pyrogram.errors import YouBlockedUser
+    from pyrogram.errors import YouBlockedUser, FloodWait
     from pyrogram.raw.functions.phone import EditGroupCallTitle, CreateGroupCall
     from pyrogram.raw.functions.messages import DeleteHistory
     from random import randint
@@ -245,7 +245,7 @@ class MusicPlayer(object):
             os.remove(f'radio-{CHAT}.raw')
         # credits: https://t.me/c/1480232458/6825
         #os.mkfifo(f'radio-{CHAT}.raw')
-        if not CALL_STATUS.get(CHAT):
+        if not group_call.is_connected:
             await self.start_call()
         ffmpeg_log = open("ffmpeg.log", "w+")
         command=["ffmpeg", "-y", "-i", station_stream_url, "-f", "s16le", "-ac", "2",
@@ -305,6 +305,10 @@ class MusicPlayer(object):
         group_call = self.group_call
         try:
             await group_call.start(CHAT)
+        except FloodWait as e:
+            await sleep(e.x)
+            if not group_call.is_connected:
+                await group_call.start(CHAT)
         except GroupCallNotFoundError:
             try:
 
