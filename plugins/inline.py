@@ -27,7 +27,6 @@ from pyrogram import Client, errors
 from config import Config
 REPLY_MESSAGE=Config.REPLY_MESSAGE
 
-
         await query.answer(results=answers, cache_time=0)
         return
     string = query.query.lower().strip().rstrip()
