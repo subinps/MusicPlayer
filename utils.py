@@ -304,11 +304,11 @@ class MusicPlayer(object):
     async def start_call(self):
         group_call = self.group_call
         try:
-            await group_call.start(CHAT)
+            await group_call.start(CHAT, enable_action=False)
         except FloodWait as e:
             await sleep(e.x)
             if not group_call.is_connected:
-                await group_call.start(CHAT)
+                await group_call.start(CHAT, enable_action=False)
         except GroupCallNotFoundError:
             try:
 
@@ -317,7 +317,7 @@ class MusicPlayer(object):
                     random_id=randint(10000, 999999999)
                     )
                     )
-                await group_call.start(CHAT)
+                await group_call.start(CHAT, enable_action=False)
             except Exception as e:
                 print(e)
                 pass
